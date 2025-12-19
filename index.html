@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Trade | Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <div id="login-screen" class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-md shadow-2xl">
+            <h1 class="text-3xl font-black text-blue-500 text-center mb-8">MAGIC TRADE</h1>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email" class="w-full p-4 rounded-xl bg-black border border-slate-800 outline-none focus:border-blue-500">
+                <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-800 outline-none focus:border-blue-500">
+                <button onclick="login()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-500 transition">Access Portal</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden p-6 max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <h2 id="user-title" class="text-xl font-bold">---</h2>
+            <button onclick="location.reload()" class="text-xs text-slate-500 underline">Logout</button>
+        </header>
+
+        <div class="bg-slate-900 p-10 rounded-[2.5rem] border border-slate-800 shadow-xl mb-6 text-center">
+            <p class="text-slate-400 text-sm">Total Portfolio Value</p>
+            <h3 class="text-5xl font-mono font-bold mt-2 text-white">$ <span id="bal-text">0.00</span></h3>
+            <button onclick="withdraw()" class="mt-8 bg-blue-700 px-10 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-blue-600 transition">Withdraw Funds</button>
+        </div>
+
+        <div id="admin-panel" class="hidden bg-slate-800 p-6 rounded-2xl border-2 border-blue-500 mb-6 shadow-lg shadow-blue-500/20">
+            <p class="text-blue-400 font-bold text-xs mb-4 uppercase">Admin Command Center</p>
+            <div class="grid gap-3">
+                <input type="email" id="target" placeholder="User Email to Top Up" class="bg-black p-3 rounded-lg text-sm border border-slate-700">
+                <input type="number" id="amt" placeholder="Amount to Inject" class="bg-black p-3 rounded-lg text-sm border border-slate-700">
+                <button onclick="inject()" class="bg-blue-600 p-3 rounded-lg font-bold uppercase text-xs">Inject Funds</button>
+            </div>
+        </div>
+
+        <div id="trade-analysis" class="p-6 bg-slate-900/50 rounded-xl border border-slate-800 text-center">
+            <p class="text-slate-600 text-sm italic">Synchronizing institutional market data...</p>
+        </div>
+    </div>
+
+    <script>
+        let db = {
+            "mom@family.com": { name: "Family Portfolio 01", bal: 0.00 },
+            "dad@family.com": { name: "Family Portfolio 02", bal: 0.00 }
+        };
+        let activeUser = "";
+
+        function login() {
+            let e = document.getElementById('email').value.toLowerCase();
+            let p = document.getElementById('pass').value;
+            if(e === "admin@magic.com" && p === "boss123") {
+                show("Root Admin", 0, true);
+            } else if(db[e]) {
+                activeUser = e;
+                show(db[e].name, db[e].bal, false);
+            } else { alert("ACCESS DENIED: Credentials not found."); }
+        }
+
+        function show(name, bal, isAdmin) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('user-title').innerText = name;
+            document.getElementById('bal-text').innerText = bal.toLocaleString(undefined,{minimumFractionDigits:2});
+            if(isAdmin) document.getElementById('admin-panel').classList.remove('hidden');
+        }
+
+        function withdraw() {
+            if(!activeUser) { alert("Admin view: Withdrawal disabled."); return; }
+            let current = db[activeUser].bal;
+            if(current <= 0) {
+                alert("INSUFFICIENT BALANCE: Your wallet is empty.");
+            } else if(current < 3000) {
+                alert("WITHDRAWAL ERROR: Minimum limit of $3,000.00 not reached. Please contact Support.");
+            } else {
+                alert("REQUEST PENDING: Your withdrawal has been initiated.");
+            }
+        }
+
+        function inject() {
+            let t = document.getElementById('target').value.toLowerCase();
+            let a = parseFloat(document.getElementById('amt').value);
+            if(db[t]) {
+                db[t].bal += a;
+                alert("Successfully injected $" + a + " into " + t);
+                document.getElementById('bal-text').innerText = db[activeUser] ? db[activeUser].bal.toLocaleString() : "0.00";
+            } else { alert("Target email not found."); }
+        }
+    </script>
+</body>
+</html>
