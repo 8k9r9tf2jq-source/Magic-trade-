@@ -3,100 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Trade | Pro Terminal</title>
+    <title>Magic Trade | Global Institutional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #05070a; }
+        body { background-color: #05070a; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        .sidebar { width: 300px; background: #0a0f1a; border-right: 1px solid #1e293b; overflow-y: auto; }
+        .main-content { flex: 1; background: #000; position: relative; }
         .ticker-wrap { background: #0f172a; border-bottom: 1px solid #1e293b; height: 30px; overflow: hidden; }
-        .ticker { display: inline-block; white-space: nowrap; animation: scroll 40s linear infinite; font-size: 11px; padding-top: 5px; }
+        .ticker { display: inline-block; white-space: nowrap; animation: scroll 40s linear infinite; font-size: 10px; padding-top: 6px; }
         @keyframes scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .input-box { background: #000; border: 1px solid #1e293b; color: white; transition: border 0.2s; }
-        .input-box:focus { border-color: #3b82f6; outline: none; }
+        .input-box { background: #000; border: 1px solid #1e293b; color: white; font-size: 13px; }
+        .admin-panel { border: 2px solid #3b82f6; background: rgba(30, 41, 59, 0.5); }
     </style>
 </head>
 <body class="text-slate-200 font-sans">
 
     <div class="ticker-wrap">
         <div class="ticker font-mono font-bold uppercase">
-            <span class="mx-4 text-blue-400">BTC $98,241.50 ▲</span>
-            <span class="mx-4 text-green-400">EURUSD 1.0842 ▲</span>
-            <span class="mx-4 text-red-400">GOLD $2,642.10 ▼</span>
-            <span class="mx-4 text-blue-400">ETH $3,412.80 ▲</span>
-            <span class="mx-4 text-green-400">GBPUSD 1.2654 ▲</span>
-            <span class="mx-4 text-blue-400">SOL $245.10 ▲</span>
+            <span class="mx-4 text-blue-400">BTC/USD $98,241.50 ▲</span>
+            <span class="mx-4 text-green-400">EUR/USD 1.0842 ▲</span>
+            <span class="mx-4 text-red-400">XAU/USD $2,642.10 ▼</span>
+            <span class="mx-4 text-blue-400">ETH/USD $3,412.80 ▲</span>
         </div>
     </div>
 
-    <div id="auth-screen" class="flex items-center justify-center min-h-[90vh] p-6">
-        <div class="bg-[#0a0f1a] p-8 rounded-xl border border-slate-800 w-full max-w-sm shadow-2xl">
-            <h1 class="text-2xl font-black text-center text-white mb-6 tracking-tight">MAGIC TRADE</h1>
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black p-6">
+        <div class="bg-[#0a0f1a] p-8 rounded-2xl border border-slate-800 w-full max-w-sm">
+            <h1 class="text-2xl font-black text-center text-white mb-8 tracking-tighter">MAGIC TRADE</h1>
             <div class="space-y-4">
                 <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-lg input-box">
-                <input type="email" id="email" placeholder="Email ID" class="w-full p-4 rounded-lg input-box">
+                <input type="email" id="email" placeholder="Terminal ID (Email)" class="w-full p-4 rounded-lg input-box">
                 <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-lg input-box">
-                <button onclick="handleAuth()" id="main-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-lg font-bold uppercase tracking-wider text-xs">Sign In</button>
-                <button onclick="toggleAuth()" id="toggle-btn" class="w-full text-[10px] text-slate-500 hover:text-blue-400 uppercase tracking-widest mt-2">Create New Account</button>
+                <button onclick="handleAuth()" id="main-btn" class="w-full bg-blue-600 p-4 rounded-lg font-bold uppercase text-xs tracking-widest">Connect</button>
+                <button onclick="toggleAuth()" id="toggle-btn" class="w-full text-[10px] text-slate-500 uppercase mt-2">Create New Account</button>
             </div>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden max-w-6xl mx-auto p-4 md:p-8">
-        <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-            <h2 id="display-name" class="text-xl font-bold text-blue-400 uppercase tracking-tighter">---</h2>
-            <div class="flex items-center gap-4">
-                <span class="text-[10px] text-green-500 font-bold uppercase">Live Connection</span>
-                <button onclick="location.reload()" class="text-[10px] bg-slate-900 px-3 py-1 rounded border border-slate-700 hover:text-red-500">Exit</button>
+    <div id="dashboard" class="hidden flex flex-1 overflow-hidden">
+        
+        <aside class="sidebar p-5 flex flex-col">
+            <div class="mb-8">
+                <h2 id="display-name" class="text-lg font-bold text-blue-400 truncate">---</h2>
+                <p class="text-[9px] text-green-500 font-black uppercase tracking-widest">Institutional Live</p>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-[#0a0f1a] border border-slate-800 p-8 rounded-xl">
-                <p class="text-slate-500 text-xs font-bold uppercase">Total Account Value</p>
-                <h3 class="text-5xl font-bold mt-2 text-white">$ <span id="bal-text">0.00</span></h3>
-                <div class="mt-8 flex gap-3">
-                    <button onclick="alert('Secure node busy. Try again later.')" class="flex-1 bg-slate-900 border border-slate-700 p-3 rounded font-bold text-[10px] uppercase">Deposit</button>
-                    <button onclick="handleWithdraw()" class="flex-1 bg-blue-600 p-3 rounded font-bold text-[10px] uppercase hover:bg-blue-500">Withdraw</button>
+            <div class="bg-black/40 border border-slate-800 p-5 rounded-xl mb-6">
+                <p class="text-slate-500 text-[10px] font-bold uppercase">Wallet Balance</p>
+                <h3 class="text-3xl font-bold text-white mt-1">$ <span id="bal-text">0.00</span></h3>
+                <div class="grid grid-cols-2 gap-2 mt-6">
+                    <button onclick="alert('Node busy.')" class="bg-slate-800 text-[9px] font-bold p-2 rounded uppercase">Deposit</button>
+                    <button onclick="handleWithdraw()" class="bg-blue-600 text-[9px] font-bold p-2 rounded uppercase">Withdraw</button>
                 </div>
             </div>
 
-            <div class="bg-[#0a0f1a] border border-slate-800 p-6 rounded-xl">
-                <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Markets</h4>
-                <div class="space-y-3 font-mono text-xs">
-                    <div class="flex justify-between py-2 border-b border-slate-900"><span>EURUSD</span><span class="text-green-400">1.0842</span></div>
-                    <div class="flex justify-between py-2 border-b border-slate-900"><span>BTCUSD</span><span class="text-blue-400">98,241.50</span></div>
-                    <div class="flex justify-between py-2 border-b border-slate-900"><span>XAUUSD</span><span class="text-red-400">2,642.10</span></div>
-                    <div class="flex justify-between py-2 border-b border-slate-900"><span>US30</span><span class="text-green-400">44,785.20</span></div>
+            <div class="flex-1">
+                <h4 class="text-[10px] font-bold text-slate-500 uppercase mb-4">Watchlist</h4>
+                <div class="space-y-3 font-mono text-[11px]">
+                    <div class="flex justify-between border-b border-slate-900 pb-2"><span>EURUSD</span><span class="text-green-400">1.0842</span></div>
+                    <div class="flex justify-between border-b border-slate-900 pb-2"><span>BTCUSD</span><span class="text-blue-400">98,241</span></div>
+                    <div class="flex justify-between border-b border-slate-900 pb-2"><span>XAUUSD</span><span class="text-red-400">2,642</span></div>
                 </div>
             </div>
-        </div>
 
-        <div id="admin-panel" class="hidden mt-6 bg-blue-900/10 border border-blue-500/50 p-6 rounded-xl">
-            <h4 class="text-blue-400 font-bold text-xs mb-4 uppercase">Admin Master Control</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <input type="email" id="target-email" placeholder="User Email" class="bg-black p-3 rounded border border-slate-800 text-xs">
-                <input type="number" id="inject-amt" placeholder="Amount" class="bg-black p-3 rounded border border-slate-800 text-xs">
-                <button onclick="injectFunds()" class="bg-blue-600 p-3 rounded font-bold uppercase text-[10px]">Add Funds</button>
+            <div id="admin-panel" class="hidden admin-panel p-4 rounded-xl mt-4">
+                <p class="text-blue-400 font-bold text-[10px] mb-3 uppercase tracking-tighter">Admin Command Center</p>
+                <input type="email" id="target-email" placeholder="User Email" class="w-full bg-black p-2 rounded mb-2 text-[10px] border border-slate-700">
+                <input type="number" id="inject-amt" placeholder="Amount" class="w-full bg-black p-2 rounded mb-3 text-[10px] border border-slate-700">
+                <button onclick="injectFunds()" class="w-full bg-blue-600 p-2 rounded text-[10px] font-bold uppercase">Inject Capital</button>
             </div>
-        </div>
 
-        <div class="mt-6 bg-[#0a0f1a] border border-slate-800 p-6 rounded-xl">
-            <h4 class="text-slate-500 text-xs font-bold uppercase mb-4">Live Signals</h4>
-            <div id="trade-content" class="text-center py-10">
-                <p class="text-slate-700 text-[10px] uppercase tracking-widest">Waiting for next market entry...</p>
+            <button onclick="location.reload()" class="mt-4 text-[10px] text-slate-600 hover:text-red-500 text-left">DISCONNECT SESSION</button>
+        </aside>
+
+        <main class="main-content">
+            <iframe src="https://s.tradingview.com/widgetembed/?symbol=BTCUSD&interval=D&hidesidetoolbar=1&theme=dark&style=1&timezone=Etc%2FUTC" class="w-full h-full"></iframe>
+            
+            <div class="absolute bottom-6 right-6 w-64 bg-slate-900/90 border border-slate-800 p-4 rounded-xl shadow-2xl backdrop-blur-md">
+                <p class="text-blue-400 font-bold text-[10px] mb-2 uppercase">AI Analysis Feed</p>
+                <div id="trade-content" class="text-[10px] text-slate-400 italic">
+                    Scanning market depth for 100x opportunities...
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        let db = { "admin@magic.com": { name: "Root Admin", pass: "boss123", bal: 0, isAdmin: true } };
+        let db = { "admin@magic.com": { name: "System Admin", pass: "boss123", bal: 0, isAdmin: true } };
         let currentUser = null;
         let isLoginMode = true;
 
         function toggleAuth() {
             isLoginMode = !isLoginMode;
             document.getElementById('reg-name').classList.toggle('hidden');
-            document.getElementById('main-btn').innerText = isLoginMode ? "Sign In" : "Register";
-            document.getElementById('toggle-btn').innerText = isLoginMode ? "Create New Account" : "Back to Login";
+            document.getElementById('main-btn').innerText = isLoginMode ? "Connect" : "Initialize Account";
+            document.getElementById('toggle-btn').innerText = isLoginMode ? "New Account? Sign Up" : "Back to Terminal";
         }
 
         function handleAuth() {
@@ -105,11 +106,11 @@
             const n = document.getElementById('reg-name').value;
             if (isLoginMode) {
                 if (db[e] && db[e].pass === p) enter(e);
-                else alert("Error: Access Denied.");
+                else alert("Unauthorized Connection.");
             } else {
-                if (!e || !p || !n) { alert("Fill all fields."); return; }
+                if (!e || !p || !n) { alert("Missing credentials."); return; }
                 db[e] = { name: n, pass: p, bal: 0, isAdmin: false };
-                alert("Account Created.");
+                alert("Account node established.");
                 toggleAuth();
             }
         }
@@ -117,6 +118,7 @@
         function enter(e) {
             currentUser = db[e];
             document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('flex');
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('display-name').innerText = currentUser.name;
             update();
@@ -129,9 +131,9 @@
 
         function handleWithdraw() {
             if (currentUser.isAdmin) return;
-            if (currentUser.bal <= 0) alert("Balance Insufficient.");
-            else if (currentUser.bal < 3000) alert("Minimum withdrawal: $3,000.00.");
-            else alert("Transaction Initialized.");
+            if (currentUser.bal <= 0) alert("WALLET ERROR: Account empty.");
+            else if (currentUser.bal < 3000) alert("THRESHOLD ERROR: Minimum withdrawal $3,000.00 required.");
+            else alert("REQUEST PENDING: Blockchain verification active.");
         }
 
         function injectFunds() {
@@ -139,11 +141,10 @@
             const a = parseFloat(document.getElementById('inject-amt').value);
             if (db[t]) {
                 db[t].bal += a;
-                alert(`Added $${a} to ${t}`);
+                alert(`SUCCESS: $${a} allocated.`);
                 if (currentUser.isAdmin) update();
-            } else alert("Invalid User.");
+            } else alert("Node not found.");
         }
     </script>
 </body>
 </html>
-
