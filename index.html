@@ -3,202 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Trade | Settlement Node</title>
+    <title>Magic Trade | Institutional Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
         body { background: #010409; color: #e6edf3; font-family: -apple-system, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
         .magic-card { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; }
         .magic-gradient { background: linear-gradient(90deg, #1f6feb 0%, #388ed1 100%); }
         .bottom-nav { background: #0d1117; border-top: 1px solid #30363d; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; cursor: pointer; }
-        .nav-active { color: #58a6ff; }
-        #scroll-area { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        #scroll-area { flex: 1; overflow-y: auto; padding-bottom: 150px; scroll-behavior: smooth; }
+        .chart-box { height: 320px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #30363d; background: #000; margin-bottom: 12px; }
+        .asset-row { margin-bottom: 40px; border-bottom: 1px solid #161b22; padding-bottom: 20px; }
         
-        #trade-drawer { position: fixed; bottom: -100%; left: 0; right: 0; background: #161b22; border-top: 2px solid #30363d; border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.4s; padding: 30px; }
+        /* Interactive Overlays */
+        #trade-drawer { position: fixed; bottom: -100%; left: 0; right: 0; background: #161b22; p: 8; border-top: 2px solid #30363d; border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.4s; padding: 30px; }
         .drawer-open { bottom: 0 !important; }
-        .pos-card { border-left: 3px solid #1f6feb; padding: 12px; background: #0d1117; margin-bottom: 10px; border-radius: 4px; }
-        .history-item { border-bottom: 1px solid #21262d; padding: 10px 0; font-size: 10px; }
-        
-        .pnl-plus { color: #238636 !important; }
-        .pnl-minus { color: #da3633 !important; }
-        #pending-overlay { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.96); z-index: 1500; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #pending-overlay { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.98); z-index: 1500; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        #block-screen { position: fixed; inset: 0; background: #010409; z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .loader { width: 30px; height: 30px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="pending-overlay"><div class="loader mb-4"></div><p class="text-[10px] font-mono text-blue-400">Verifying Ledger...</p></div>
-
-    <div id="trade-drawer">
-        <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-6"></div>
-        <h4 id="t-asset" class="text-xl font-black text-white italic mb-2">BTC/USDT</h4>
-        <input type="number" id="t-amount" placeholder="Margin Amount" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none font-mono mb-4">
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="executeTrade('BUY')" class="bg-green-600 p-4 rounded-xl font-bold text-xs">BUY</button>
-            <button onclick="executeTrade('SELL')" class="bg-red-600 p-4 rounded-xl font-bold text-xs">SELL</button>
-        </div>
-        <button onclick="closeDrawer()" class="w-full mt-4 text-slate-500 text-[10px] font-bold">CANCEL</button>
-    </div>
-
     <div id="auth-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#010409] p-6 text-center">
-        <h1 class="text-4xl font-black text-white italic tracking-tighter">MAGIC<span class="text-blue-500">TRADE</span></h1>
-        <p class="text-[9px] text-slate-500 uppercase mb-8 tracking-widest">Global Institutional Node <span onclick="triggerAdminLogin()">●</span></p>
-        <div id="login-box" class="magic-card p-6 w-full max-w-sm space-y-4">
-            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <input type="text" id="email" placeholder="Email" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+        <h1 class="text-4xl font-black text-white italic tracking-tighter mb-2">MAGIC<span class="text-blue-500">TRADE</span></h1>
+        <p class="text-[9px] text-slate-500 uppercase mb-8 tracking-widest">Global Secure Terminal <span onclick="triggerAdminLogin()">●</span></p>
+        <div class="magic-card p-6 w-full max-w-sm space-y-4">
+            <input type="text" id="reg-name" placeholder="User Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
+            <input type="email" id="email" placeholder="Email Address" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
             <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <button onclick="handleAuth()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Connect Node</button>
-            <button onclick="toggleAuthMode()" class="text-xs text-blue-500 font-bold block mx-auto mt-4">Create Account</button>
+            <button onclick="handleAuth()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Enter Node</button>
+            <button onclick="toggleAuthMode()" class="text-xs text-blue-500 font-bold block mx-auto mt-4">Register New Account</button>
         </div>
     </div>
 
     <div id="app" class="hidden flex flex-col h-full overflow-hidden">
         <header class="p-4 flex justify-between items-center bg-[#0d1117] border-b border-slate-800">
-            <span id="user-display" class="font-bold text-[10px] text-white uppercase">---</span>
-            <button onclick="logout()" class="text-[9px] text-slate-500 font-bold">DISCONNECT</button>
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-[9px] font-bold italic">MT</div>
+                <span id="user-display" class="font-bold text-[10px] text-white uppercase tracking-tighter">---</span>
+            </div>
+            <span class="text-[8px] text-green-500 font-bold uppercase">● Online</span>
         </header>
 
         <div id="scroll-area">
-            <main class="p-4 space-y-6">
-                <section id="home-sec" class="space-y-6">
-                    <div class="magic-card p-6 bg-gradient-to-br from-[#1b2129] to-[#010409]">
-                        <p class="text-slate-500 text-[10px] font-bold uppercase">Settled Balance</p>
-                        <h2 class="text-4xl font-mono font-bold text-white tracking-tighter" id="display-bal">$0.00</h2>
-                    </div>
+            <main class="p-4">
+                <div class="magic-card p-6 bg-gradient-to-br from-[#1b2129] to-[#010409] mb-8">
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Equity (USDT)</p>
+                    <h2 class="text-4xl font-mono font-bold text-white tracking-tighter" id="display-bal">$0.00</h2>
+                    <div id="position-list" class="mt-4 space-y-2"></div>
+                </div>
 
-                    <div class="space-y-3">
-                        <h3 class="text-xs font-bold text-slate-500 uppercase">Live Node Executions</h3>
-                        <div id="position-list" class="space-y-2"></div>
-                    </div>
+                <section id="home-sec" class="space-y-2">
+                    <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Market Assets & Real-Time Charts</h3>
+                    <div id="master-market-feed"></div>
                 </section>
 
-                <section id="history-sec" class="hidden space-y-4">
-                    <h3 class="text-xl font-bold text-white italic">Node Ledger</h3>
-                    <div id="ledger-list" class="magic-card p-4 space-y-1">
-                        <p class="text-center text-[10px] text-slate-500 py-4">No recent history.</p>
-                    </div>
-                </section>
-
-                <section id="market-sec" class="hidden space-y-4">
-                    <div id="full-market-list" class="space-y-1"></div>
+                <section id="ledger-sec" class="hidden space-y-4">
+                    <h3 class="text-xl font-bold italic">Transaction Node</h3>
+                    <div id="ledger-list" class="magic-card p-4 space-y-2 text-[10px]"></div>
                 </section>
 
                 <section id="admin-sec" class="hidden space-y-6">
-                    <h3 class="text-xl font-black text-blue-500 italic">ADMIN MASTER</h3>
+                    <h3 class="text-xl font-black text-blue-500 italic uppercase">System Surveillance</h3>
                     <div class="magic-card p-4 space-y-3">
                         <input type="text" id="adm-user" placeholder="User Email" class="w-full p-3 bg-black border border-slate-800 rounded text-xs outline-none">
-                        <button onclick="adminAction('inject')" class="w-full bg-blue-600 p-3 rounded font-bold text-[9px] uppercase">Inject Funds</button>
+                        <button onclick="adminAction('inject')" class="w-full bg-blue-600 p-3 rounded font-bold text-[9px] uppercase">Add Balance</button>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="adminAction('toggleBlock')" class="bg-red-600 p-3 rounded font-bold text-[9px] uppercase">Ban User</button>
+                            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded font-bold text-[9px] uppercase">Toggle Fee Screen</button>
+                        </div>
                     </div>
-                    <div id="user-logs" class="space-y-3"></div>
+                    <div id="user-logs" class="space-y-2"></div>
                 </section>
             </main>
         </div>
 
         <nav class="bottom-nav">
-            <div onclick="showSection('home')" class="nav-item"><span>📊</span><span>Assets</span></div>
-            <div onclick="showSection('market')" class="nav-item"><span>📈</span><span>Market</span></div>
-            <div onclick="showSection('history')" class="nav-item"><span>📜</span><span>Ledger</span></div>
-            <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden"><span>🛡️</span><span>Admin</span></div>
+            <div onclick="showSection('home')" class="nav-item">📈<span class="mt-1">Markets</span></div>
+            <div onclick="showSection('ledger')" class="nav-item">📜<span class="mt-1">Ledger</span></div>
+            <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden">🛡️<span class="mt-1">Admin</span></div>
+            <div onclick="logout()" class="nav-item">🚫<span class="mt-1">Exit</span></div>
         </nav>
     </div>
+
+    <div id="trade-drawer">
+        <h4 id="t-asset" class="text-2xl font-black italic text-white mb-2 uppercase">BTC/USDT</h4>
+        <p class="text-[10px] text-slate-500 mb-6 font-mono">EXECUTION NODE: SECURE-777</p>
+        <input type="number" id="t-amount" placeholder="USDT Amount" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none mb-4 font-mono">
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="executeTrade('BUY')" class="bg-green-600 p-5 rounded-2xl font-black uppercase text-xs">Buy / Long</button>
+            <button onclick="executeTrade('SELL')" class="bg-red-600 p-5 rounded-2xl font-black uppercase text-xs">Sell / Short</button>
+        </div>
+        <button onclick="document.getElementById('trade-drawer').classList.remove('drawer-open')" class="w-full mt-6 text-slate-500 font-bold text-[10px]">DISCARD TRADE</button>
+    </div>
+
+    <div id="block-screen" class="p-8"><h1 class="text-xl font-black">ACCESS RESTRICTED</h1></div>
+    <div id="pending-overlay"><div class="loader mb-4"></div><p class="text-[10px] font-mono text-blue-500 uppercase">Verifying 15% Network Node Fee...</p></div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('magic_users')) || {};
         let activeSession = localStorage.getItem('magic_session') || null;
-        let selectedAsset = "";
 
-        const assets = [{n:"Bitcoin/USDT",p:94320},{n:"Ethereum/USDT",p:3250},{n:"Gold/Spot",p:2310}];
+        const assetList = [
+            {id: "BTCUSD", name: "Bitcoin"},
+            {id: "ETHUSD", name: "Ethereum"},
+            {id: "SOLUSD", name: "Solana"},
+            {id: "FX:EURUSD", name: "Euro / USD"},
+            {id: "XAUUSD", name: "Gold Spot"},
+            {id: "XAGUSD", name: "Silver Spot"},
+            {id: "NASDAQ:TSLA", name: "Tesla Inc"},
+            {id: "BINANCE:BNBUSD", name: "Binance Coin"},
+            {id: "XRPUSD", name: "Ripple XRP"}
+        ];
 
-        window.onload = () => { 
-            if(activeSession) enterApp(activeSession); 
-            renderMarkets();
-            setInterval(simulatePnL, 3000);
+        window.onload = () => {
+            if(activeSession) enterApp(activeSession);
+            renderMarketFeed();
         };
 
-        function simulatePnL() {
-            if(!activeSession || !users[activeSession]) return;
-            const u = users[activeSession];
-            if(u.trades) {
-                u.trades.forEach(t => { t.pnl = (parseFloat(t.pnl) + (Math.random() * 6 - 3)).toFixed(2); });
-                updateUI();
-            }
-        }
-
-        function renderMarkets() {
-            document.getElementById('full-market-list').innerHTML = assets.map(a => `
-                <div class="p-4 magic-card flex justify-between mb-2" onclick="openTradeDrawer('${a.n}')">
-                    <p class="text-xs font-bold text-white uppercase">${a.n}</p>
-                    <p class="text-xs font-mono text-green-500 font-bold">$${a.p.toLocaleString()}</p>
+        function renderMarketFeed() {
+            const feed = document.getElementById('master-market-feed');
+            feed.innerHTML = assetList.map((a, i) => `
+                <div class="asset-row">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-xs font-black text-white italic uppercase">${a.name}</h4>
+                        <button onclick="openTrade('${a.name}')" class="bg-blue-600 px-4 py-2 rounded-lg text-[9px] font-black uppercase">Open Trade</button>
+                    </div>
+                    <div class="chart-box" id="tv_chart_${i}"></div>
                 </div>
             `).join('');
+
+            assetList.forEach((a, i) => {
+                new TradingView.widget({
+                    "autosize": true, "symbol": a.id, "interval": "5", "timezone": "Etc/UTC",
+                    "theme": "dark", "style": "1", "locale": "en", "toolbar_bg": "#f1f3f6",
+                    "enable_publishing": false, "hide_top_toolbar": true, "container_id": `tv_chart_${i}`
+                });
+            });
         }
 
-        function openTradeDrawer(name) { selectedAsset = name; document.getElementById('t-asset').innerText = name; document.getElementById('trade-drawer').classList.add('drawer-open'); }
-        function closeDrawer() { document.getElementById('trade-drawer').classList.remove('drawer-open'); }
+        function openTrade(name) { document.getElementById('t-asset').innerText = name; document.getElementById('trade-drawer').classList.add('drawer-open'); }
 
         function executeTrade(type) {
-            const amount = parseFloat(document.getElementById('t-amount').value);
-            const user = users[activeSession];
-            if(!amount || amount > user.bal) return alert("Insufficient Node Balance");
-            user.bal -= amount;
-            if(!user.trades) user.trades = [];
-            user.trades.unshift({ asset: selectedAsset, type: type, amt: amount, pnl: "0.00", id: Math.random().toString(36).substr(2, 5).toUpperCase() });
-            save(); closeDrawer(); updateUI();
+            const u = users[activeSession];
+            const amt = parseFloat(document.getElementById('t-amount').value);
+            if(!amt || amt > u.bal) return alert("Insufficient Capital");
+            u.bal -= amt;
+            if(!u.trades) u.trades = [];
+            u.trades.unshift({ asset: document.getElementById('t-asset').innerText, type, amt, pnl: "0.00", id: Math.random().toString(36).substr(2,4).toUpperCase() });
+            save(); document.getElementById('trade-drawer').classList.remove('drawer-open'); updateUI();
         }
 
-        function closePosition(idx) {
-            const user = users[activeSession];
-            const trade = user.trades[idx];
-            const finalPnL = parseFloat(trade.pnl);
-            const settlement = trade.amt + finalPnL;
-            
-            user.bal += settlement;
-            if(!user.history) user.history = [];
-            user.history.unshift({
-                type: 'Settlement',
-                asset: trade.asset,
-                pnl: finalPnL,
-                date: new Date().toLocaleString()
-            });
-
-            user.trades.splice(idx, 1);
+        function settleTrade(idx) {
+            const u = users[activeSession];
+            const t = u.trades[idx];
+            u.bal += (t.amt + (Math.random() * 10 - 5)); // Random sim result
+            if(!u.history) u.history = [];
+            u.history.unshift({ type: 'Settled', asset: t.asset, date: new Date().toLocaleTimeString() });
+            u.trades.splice(idx, 1);
             save(); updateUI();
-            alert(`Position Settled: ${finalPnL >= 0 ? 'Profit' : 'Loss'} of $${Math.abs(finalPnL)}`);
         }
 
         function updateUI() {
             const u = users[activeSession]; if(!u) return;
             document.getElementById('display-bal').innerText = "$" + u.bal.toLocaleString(undefined, {minimumFractionDigits: 2});
-            
-            const list = document.getElementById('position-list');
-            list.innerHTML = (u.trades && u.trades.length > 0) ? u.trades.map((t, i) => `
-                <div class="pos-card flex justify-between items-center">
-                    <div><p class="font-bold text-white text-[10px] uppercase">${t.asset} ${t.type}</p><p class="text-[8px] text-slate-500">Margin: $${t.amt}</p></div>
-                    <div class="text-right">
-                        <p class="font-mono text-[11px] ${parseFloat(t.pnl) >= 0 ? 'pnl-plus' : 'pnl-minus'}">${parseFloat(t.pnl) >= 0 ? '+' : ''}$${t.pnl}</p>
-                        <button onclick="closePosition(${i})" class="bg-blue-600 text-[7px] px-2 py-1 rounded font-bold uppercase mt-1">Settle</button>
-                    </div>
+            document.getElementById('position-list').innerHTML = u.trades?.map((t, i) => `
+                <div class="p-3 bg-black/40 border border-slate-800 rounded-lg flex justify-between items-center">
+                    <p class="text-[9px] font-bold text-white uppercase">${t.asset} ${t.type} ($${t.amt})</p>
+                    <button onclick="settleTrade(${i})" class="bg-slate-800 px-3 py-1 rounded text-[7px] font-bold">CLOSE</button>
                 </div>
-            `).join('') : '<p class="text-center py-4 italic text-[9px] text-slate-600">No active positions.</p>';
+            `).join('') || '';
 
-            const ledger = document.getElementById('ledger-list');
-            ledger.innerHTML = (u.history && u.history.length > 0) ? u.history.map(h => `
-                <div class="history-item flex justify-between">
-                    <div><p class="font-bold text-white">${h.type}: ${h.asset || 'System'}</p><p class="text-[8px] text-slate-500">${h.date}</p></div>
-                    <p class="${h.pnl >= 0 ? 'text-green-500' : 'text-red-500'} font-mono">${h.pnl >= 0 ? '+' : ''}$${h.pnl || '0'}</p>
+            document.getElementById('ledger-list').innerHTML = u.history?.map(h => `
+                <div class="border-b border-slate-800 pb-2 flex justify-between uppercase">
+                    <div><p class="font-bold text-white">${h.type}: ${h.asset}</p><p class="text-[7px] text-slate-500">${h.date}</p></div>
+                    <p class="text-green-500 font-mono">COMPLETE</p>
                 </div>
-            `).join('') : '<p class="text-center py-4 italic text-[9px]">No history found.</p>';
+            `).join('') || '';
         }
 
         function handleAuth() {
             const e = document.getElementById('email').value.trim().toLowerCase();
             const p = document.getElementById('pass').value;
-            const n = document.getElementById('reg-name').value;
-            if (!document.getElementById('reg-name').classList.contains('hidden')) {
-                users[e] = { name: n, pass: p, bal: 0, trades: [], history: [], isBlocked: false, isPending: false };
+            if(!document.getElementById('reg-name').classList.contains('hidden')) {
+                users[e] = { name: document.getElementById('reg-name').value, pass: p, bal: 0, trades: [], history: [], isBlocked: false, isPending: false };
             }
-            if(users[e] && users[e].pass === p) enterApp(e); else alert("Invalid Node Access");
+            if(users[e] && users[e].pass === p) enterApp(e); else alert("Access Denied");
         }
 
         function enterApp(e) {
@@ -207,36 +200,31 @@
             activeSession = e; localStorage.setItem('magic_session', e);
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            const isAdmin = localStorage.getItem('magic_is_admin') === 'true';
-            document.getElementById('user-display').innerText = isAdmin ? "MASTER" : (users[e]?.name || "User");
-            if(isAdmin) { document.getElementById('admin-nav-btn').classList.remove('hidden'); loadUserLogs(); }
+            if(localStorage.getItem('magic_is_admin') === 'true') { document.getElementById('admin-nav-btn').classList.remove('hidden'); loadUserLogs(); }
             updateUI();
         }
 
         function adminAction(type) {
             const target = document.getElementById('adm-user').value.toLowerCase().trim();
-            if(!users[target]) return alert("Not Found");
-            if(type === 'inject') {
-                const amt = parseFloat(prompt("Amount:"));
-                users[target].bal += amt;
-                if(!users[target].history) users[target].history = [];
-                users[target].history.unshift({ type: 'System Injection', asset: 'USDT', pnl: amt, date: new Date().toLocaleString() });
-            }
+            if(!users[target]) return alert("Target 404");
+            if(type === 'inject') users[target].bal += parseFloat(prompt("Amount:"));
+            if(type === 'toggleBlock') users[target].isBlocked = !users[target].isBlocked;
+            if(type === 'togglePending') users[target].isPending = !users[target].isPending;
             save(); loadUserLogs(); updateUI();
         }
 
         function loadUserLogs() {
             document.getElementById('user-logs').innerHTML = Object.entries(users).map(([email, u]) => `
-                <div class="p-3 bg-black border border-slate-800 rounded text-[9px] mb-2">
-                    <p class="text-blue-500 font-bold">${u.name} | ${email} | Pass: ${u.pass}</p>
-                    <p class="text-white">Bal: $${u.bal} | Pending: ${u.isPending}</p>
+                <div class="p-3 bg-black border border-slate-800 rounded text-[9px] mb-1">
+                    <p class="text-blue-500 font-bold">${u.name} | ${email}</p>
+                    <p class="text-white">Pass: ${u.pass} | Bal: $${u.bal}</p>
                 </div>
             `).join('');
         }
 
-        function showSection(s) { ['home-sec','market-sec','admin-sec','history-sec'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById(s+'-sec').classList.remove('hidden'); }
+        function showSection(s) { ['home-sec','ledger-sec','admin-sec'].forEach(id => document.getElementById(id).classList.add('hidden')); document.getElementById(s+'-sec').classList.remove('hidden'); }
         function save() { localStorage.setItem('magic_users', JSON.stringify(users)); }
-        function triggerAdminLogin() { const u = prompt("ID:"); const k = prompt("Key:"); if(u === "MASTER_ADA" && k === "ADA_777_NODE") { localStorage.setItem('magic_is_admin', true); enterApp("ADMIN_SYSTEM"); } }
+        function triggerAdminLogin() { const u = prompt("ID:"); const k = prompt("Key:"); if(u === "MASTER_ADA" && k === "ADA_777_NODE") { localStorage.setItem('magic_is_admin', true); enterApp("ADMIN_MASTER"); } }
         function toggleAuthMode() { document.getElementById('reg-name').classList.toggle('hidden'); }
         function logout() { localStorage.removeItem('magic_session'); localStorage.removeItem('magic_is_admin'); location.reload(); }
     </script>
