@@ -11,10 +11,11 @@
         .magic-card { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; }
         .magic-gradient { background: linear-gradient(90deg, #1f6feb 0%, #388ed1 100%); }
         .bottom-nav { background: #0d1117; border-top: 1px solid #30363d; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; cursor: pointer; }
         .nav-active { color: #58a6ff; }
-        input { background: #0d1117 !important; border: 1px solid #30363d !important; color: white !important; }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #161b22; cursor: pointer; }
+        .market-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .market-tile { background: #161b22; border: 1px solid #30363d; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .market-tile:active { background: #1c2128; border-color: #58a6ff; }
     </style>
 </head>
 <body>
@@ -23,9 +24,9 @@
         <h1 class="text-4xl font-black mb-1 text-white tracking-tighter">MAGIC<span class="text-blue-500">TRADE</span></h1>
         <p class="text-[9px] text-slate-500 tracking-[0.4em] mb-10 uppercase">Global Institutional Terminal</p>
         <div class="magic-card p-6 w-full max-w-sm space-y-4">
-            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl text-sm outline-none">
-            <input type="email" id="email" placeholder="Email / ID" class="w-full p-4 rounded-xl text-sm outline-none">
-            <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl text-sm outline-none">
+            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm outline-none">
+            <input type="email" id="email" placeholder="Email / ID" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm outline-none">
+            <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm outline-none">
             <button onclick="handleAuth()" id="main-btn" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs tracking-widest active:scale-95">Connect</button>
             <button onclick="toggleAuth()" id="toggle-btn" class="text-xs text-blue-500 font-bold block mx-auto mt-4">New User? Register</button>
         </div>
@@ -43,118 +44,116 @@
             <button onclick="showSection('admin')" id="admin-icon" class="hidden text-xl">⚙️</button>
         </header>
 
-        <main class="flex-1 overflow-y-auto pb-24">
+        <main class="flex-1 overflow-y-auto pb-24 px-4">
             
-            <section id="home-sec" class="p-4 space-y-4">
+            <section id="home-sec" class="py-4 space-y-4">
                 <div class="magic-card p-6 bg-gradient-to-br from-[#161b22] to-[#0d1117] shadow-xl">
-                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Available Equity</p>
-                    <h2 class="text-4xl font-mono font-bold text-white tracking-tighter">$ <span id="balance">0.00</span></h2>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Total Portfolio Value</p>
+                    <h2 class="text-4xl font-mono font-bold text-white tracking-tighter">≈ <span id="balance">0.00</span> <span class="text-xs text-slate-500">USDT</span></h2>
                     <div class="grid grid-cols-2 gap-3 mt-6">
                         <button onclick="showSection('deposit')" class="bg-[#238636] py-3 rounded-xl font-bold text-xs uppercase shadow-lg">Deposit</button>
                         <button onclick="showSection('withdraw')" class="bg-slate-800 py-3 rounded-xl font-bold text-xs uppercase">Withdraw</button>
                     </div>
                 </div>
-                <div class="magic-card overflow-hidden h-[300px]">
-                    <iframe src="https://s.tradingview.com/widgetembed/?symbol=BTCUSD&interval=1&theme=dark&style=1" class="w-full h-full"></iframe>
+
+                <div class="magic-card overflow-hidden h-[280px]">
+                    <div class="p-2 bg-black/40 flex justify-between border-b border-white/5">
+                        <span id="chart-title" class="text-[9px] font-bold text-blue-400 uppercase tracking-widest px-2">BTC/USDT REAL-TIME</span>
+                        <span class="text-[9px] text-slate-500 px-2">100x Leverage</span>
+                    </div>
+                    <iframe id="main-chart" src="https://s.tradingview.com/widgetembed/?symbol=BTCUSD&interval=1&theme=dark&style=1" class="w-full h-full"></iframe>
                 </div>
+
+                <h4 class="text-[11px] font-bold uppercase text-slate-500 tracking-widest pt-2">Global Markets</h4>
+                <div class="market-grid" id="market-tiles">
+                    </div>
             </section>
 
-            <section id="settings-sec" class="hidden">
-                <div class="p-6">
-                    <h3 class="text-xl font-bold mb-6">Account Settings</h3>
-                    <div class="magic-card overflow-hidden">
-                        <div class="setting-row"><span>Identity Verification</span><span class="text-green-500 text-[10px] font-bold">LEVEL 2</span></div>
-                        <div class="setting-row"><span>Security Center</span><span class="text-slate-500">→</span></div>
-                        <div class="setting-row" onclick="showAbout()"><span>About Magic Trade</span><span class="text-blue-500 text-[10px]">v4.2.0</span></div>
-                        <div class="setting-row text-red-500 font-bold" onclick="logout()"><span>Log Out</span></div>
+            <section id="settings-sec" class="hidden py-4 space-y-4">
+                <h3 class="text-xl font-bold mb-4">Terminal Settings</h3>
+                <div class="magic-card p-4 space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                        <span class="text-sm">Infrastructure Provider</span>
+                        <span class="text-blue-400 text-xs font-bold">Elon Musk / X Holdings</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                        <span class="text-sm">Node License</span>
+                        <span class="text-green-500 text-xs font-bold">Institutional (v4.2)</span>
+                    </div>
+                    <div class="py-4 text-[11px] text-slate-500 leading-relaxed italic">
+                        "This terminal is sponsored by SpaceX Corp and X Holdings to facilitate global decentralized liquidity."
                     </div>
                 </div>
             </section>
 
-            <div id="about-box" class="hidden fixed inset-0 z-[300] bg-black/90 backdrop-blur-md p-10 flex flex-col justify-center text-center">
-                <h2 class="text-2xl font-black mb-4">MAGIC<span class="text-blue-500">TRADE</span></h2>
-                <p class="text-sm text-slate-300 leading-relaxed">
-                    Magic Trade is a next-generation high-frequency trading terminal. <br><br>
-                    <b class="text-white">Official Sponsor:</b> <br>
-                    <span class="text-blue-400 font-bold">Elon Musk / X Holdings (SpaceX Corp)</span> <br><br>
-                    Licensed for institutional digital asset management across 140+ countries.
-                </p>
-                <button onclick="document.getElementById('about-box').classList.add('hidden')" class="mt-10 magic-gradient p-3 rounded-xl font-bold text-xs uppercase">Close</button>
-            </div>
-
-            <section id="withdraw-sec" class="hidden p-4 space-y-4">
-                <h3 class="text-sm font-bold uppercase text-slate-500 px-2">Select Payout Method</h3>
-                <div class="grid grid-cols-1 gap-3">
-                    <div onclick="openWithdrawForm('Cash App')" class="p-4 magic-card flex justify-between"><span>Cash App</span><span class="text-green-500 text-xs">Instant</span></div>
-                    <div onclick="openWithdrawForm('Apple Pay')" class="p-4 magic-card flex justify-between"><span>Apple Pay</span><span class="text-blue-400 text-xs">Instant</span></div>
-                    <div onclick="openWithdrawForm('Zelle')" class="p-4 magic-card flex justify-between"><span>Zelle</span><span class="text-purple-500 text-xs">Instant</span></div>
-                </div>
-            </section>
-
-            <section id="deposit-sec" class="hidden p-6 text-center">
-                <div id="qrcode" class="bg-white p-3 inline-block rounded-2xl mb-4"></div>
-                <p class="text-xs font-mono text-blue-400">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
-            </section>
-
-            <section id="admin-sec" class="hidden p-6">
-                <div class="border-2 border-blue-500 p-6 rounded-2xl space-y-4">
-                    <input type="email" id="adm-target" placeholder="User Email" class="w-full p-4 rounded-xl text-sm">
-                    <input type="number" id="adm-amt" placeholder="Amount" class="w-full p-4 rounded-xl text-sm">
-                    <button onclick="adminInject()" class="w-full magic-gradient p-4 rounded-xl font-bold text-xs">INJECT</button>
-                </div>
+            <section id="withdraw-sec" class="hidden py-4 space-y-4 text-center">
+                 <h3 class="text-xl font-bold">Withdraw Gateway</h3>
+                 <p class="text-xs text-slate-400">Select Payout Method (CashApp, Apple Pay, Zelle)</p>
+                 <button onclick="alert('ERROR: 15% Verification Fee required to initiate external transfer.')" class="w-full bg-slate-800 p-4 rounded-xl mt-4">Initiate Payout</button>
             </section>
         </main>
 
         <nav class="bottom-nav">
-            <button onclick="showSection('home')" class="nav-item"><span>🏠</span><span>Home</span></button>
-            <button onclick="window.open('https://t.me/+12156208677')" class="nav-item"><span>🎧</span><span>Support</span></button>
-            <button onclick="showSection('settings')" class="nav-item"><span>⚙️</span><span>Settings</span></button>
+            <div onclick="showSection('home')" class="nav-item nav-active"><span>🏠</span><span>Assets</span></div>
+            <div onclick="window.open('https://t.me/+12156208677')" class="nav-item"><span>💬</span><span>Support</span></div>
+            <div onclick="showSection('settings')" class="nav-item"><span>⚙️</span><span>Settings</span></div>
+            <div onclick="logout()" class="nav-item"><span>🚪</span><span>Logout</span></div>
         </nav>
     </div>
 
     <script>
+        const marketData = [
+            { name: "ETH/USD", symbol: "ETHUSD", change: "+1.2%" },
+            { name: "XAU/USD", symbol: "XAUUSD", change: "-0.5%" },
+            { name: "SOL/USD", symbol: "SOLUSD", change: "+4.8%" },
+            { name: "EUR/USD", symbol: "EURUSD", change: "+0.1%" },
+            { name: "TSLA/USD", symbol: "TSLAUSD", change: "+2.3%" },
+            { name: "AAPL/USD", symbol: "AAPLUSD", change: "-1.1%" }
+        ];
+
         let users = JSON.parse(localStorage.getItem('magic_users')) || { "admin@magic.com": { name: "Root Admin", pass: "boss123", bal: 0, isAdmin: true } };
         let activeSession = localStorage.getItem('magic_session') || null;
 
         window.onload = () => {
+            renderTiles();
             if(activeSession && users[activeSession]) enterApp(activeSession);
-            new QRCode(document.getElementById("qrcode"), { text: "bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm", width: 160, height: 160 });
         };
 
-        function showAbout() { document.getElementById('about-box').classList.remove('hidden'); }
+        function renderTiles() {
+            const container = document.getElementById('market-tiles');
+            container.innerHTML = marketData.map(m => `
+                <div class="market-tile" onclick="changeChart('${m.symbol}', '${m.name}')">
+                    <p class="text-[10px] font-bold text-white uppercase">${m.name}</p>
+                    <p class="text-[9px] ${m.change.includes('+') ? 'text-green-500' : 'text-red-500'} font-bold mt-1">${m.change}</p>
+                </div>
+            `).join('');
+        }
+
+        function changeChart(symbol, name) {
+            document.getElementById('main-chart').src = `https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=1&theme=dark&style=1`;
+            document.getElementById('chart-title').innerText = `${name} REAL-TIME`;
+        }
+
+        function showSection(sec) {
+            ['home-sec', 'settings-sec', 'withdraw-sec'].forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(sec + '-sec').classList.remove('hidden');
+        }
+
+        // --- AUTH & ADMIN CORE ---
         function handleAuth() {
             const e = document.getElementById('email').value.toLowerCase();
             const p = document.getElementById('pass').value;
-            const n = document.getElementById('reg-name').value;
-            if(document.getElementById('reg-name').classList.contains('hidden')) {
-                if(users[e] && users[e].pass === p) enterApp(e); else alert("Denied.");
-            } else {
-                if(!e || !p || !n) return;
-                users[e] = { name: n, pass: p, bal: 0, isAdmin: false };
-                save(); alert("Registered!"); toggleAuth();
-            }
+            if(users[e] && users[e].pass === p) enterApp(e); else alert("Access Denied.");
         }
         function enterApp(e) {
             activeSession = e; localStorage.setItem('magic_session', e);
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('user-display').innerText = users[e].name;
-            if(users[e].isAdmin) document.getElementById('admin-icon').classList.remove('hidden');
-            updateUI();
+            document.getElementById('balance').innerText = users[e].bal.toLocaleString(undefined, {minimumFractionDigits: 2});
         }
-        function showSection(sec) {
-            ['home-sec', 'deposit-sec', 'admin-sec', 'withdraw-sec', 'settings-sec'].forEach(s => document.getElementById(s).classList.add('hidden'));
-            document.getElementById(sec + '-sec').classList.remove('hidden');
-        }
-        function adminInject() {
-            const t = document.getElementById('adm-target').value.toLowerCase();
-            const a = parseFloat(document.getElementById('adm-amt').value);
-            if(users[t]) { users[t].bal += a; save(); alert("Capital Injected!"); updateUI(); }
-        }
-        function updateUI() { document.getElementById('balance').innerText = users[activeSession].bal.toLocaleString(undefined, {minimumFractionDigits: 2}); }
-        function toggleAuth() { document.getElementById('reg-name').classList.toggle('hidden'); }
-        function save() { localStorage.setItem('magic_users', JSON.stringify(users)); }
         function logout() { localStorage.removeItem('magic_session'); location.reload(); }
+        function toggleAuth() { document.getElementById('reg-name').classList.toggle('hidden'); }
     </script>
 </body>
 </html>
